@@ -1,0 +1,22 @@
+mail:
+  host: MAILHOST
+  port: 587
+  username: USERNAME
+  password: PASSWORD
+  from: FROMADDRESS
+  recipients: [RECIPIENTADDRESS#1,RECIPIENTADDRESS#2]
+
+slack:
+  token: SLACKTOKEN
+  channels: [CHANNEL#1,CHANNEL#2]
+
+telegram:
+  token: TELEGRAMTOKEN
+  chatid: [CHATID#1,CHATID#2]
+
+queries:
+  - query: "ipad"
+    expected-domains: [apple.com, amazon.com]
+
+  - query: "as roma"
+    expected-domains: []
