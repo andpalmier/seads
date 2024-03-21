@@ -6,6 +6,14 @@ import (
 	"log"
 )
 
+/*
+	TODO
+	- export as text
+	- improve docker with alpine
+	- change User-Agent string
+	- Add more search engines
+*/
+
 var (
 	configPath     = flag.String("config", "config.yaml", "path to config file")
 	consumers      = flag.Int("concurrency", 4, "number of concurrent headless browsers")
@@ -88,11 +96,10 @@ func main() {
 
 	toNotify := search(config)
 
-	fmt.Println()
-
 	if *notify && len(toNotify) > 0 {
+		fmt.Println()
 		config.notify(toNotify)
-	}
 
+	}
 	fmt.Println()
 }

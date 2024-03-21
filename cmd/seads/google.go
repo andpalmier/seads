@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"path/filepath"
 	"time"
 )
@@ -11,8 +12,12 @@ import (
 func getGoogleAds(encoded string) ([]string, error) {
 	var ads []string
 
+	// Search for chromium path
+	path, _ := launcher.LookPath()
+	u := launcher.New().Bin(path).MustLaunch()
+
 	// Create a new Rod browser instance
-	browser := rod.New().MustConnect().MustIncognito()
+	browser := rod.New().ControlURL(u).MustConnect().MustIncognito()
 	page := browser.MustPage()
 	defer browser.MustClose()
 
