@@ -41,7 +41,7 @@ Clone the GitHub repo and run Docker:
 
 ```
 docker build -t seads .
-docker run -it -v "$(pwd)":/mnt seads -h
+docker run -v "$(pwd)":/mnt seads -h
 ```
 
 ## Usage
