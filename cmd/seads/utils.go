@@ -36,15 +36,15 @@ func removeDuplicates(ads []string) ([]string, error) {
 	return results, nil
 }
 
-// normalizeURL normalizes an ad URL by adding "www." and "https://" if missing
+// normalizeURL normalizes an ad URL by adding "https://" if missing
 func normalizeURL(adURL string) string {
-	if !strings.Contains(adURL, "www.") {
-		adURL = "www." + adURL
+	if strings.HasPrefix(adURL, "https://") {
+		return adURL
 	}
-	if !strings.Contains(adURL, "https://") {
-		adURL = "https://" + adURL
+	if strings.HasPrefix(adURL, "http://") {
+		return strings.ReplaceAll(adURL, "http://", "https://")
 	}
-	return adURL
+	return "https://" + adURL
 }
 
 // EncodeString encodes an input string

@@ -8,10 +8,9 @@ import (
 
 /*
 	TODO
-	- export as text
-	- improve docker with alpine
-	- change User-Agent string
-	- Add more search engines
+	- handle errors :(
+	- export results as text
+	- change User-Agent stri
 */
 
 var (
