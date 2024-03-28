@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
 	"path/filepath"
 	"time"
 )
 
 // getBingAds searches for ads on Bing for a given encoded string
-func getBingAds(encoded string) ([]string, error) {
+func getBingAds(encoded string, userAgent string) ([]string, error) {
 	var ads []string
 
 	// Search for chromium path
@@ -20,6 +21,9 @@ func getBingAds(encoded string) ([]string, error) {
 	browser := rod.New().ControlURL(u).MustConnect().MustIncognito()
 	page := browser.MustPage()
 	defer browser.MustClose()
+	if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"}); err != nil {
+		return nil, err
+	}
 
 	wait := page.MustWaitNavigation()
 	// Open Bing search page and search for encoded string
@@ -38,9 +42,15 @@ func getBingAds(encoded string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		adPage := browser.MustPage(*href)
+		adPage := browser.MustPage()
 		defer adPage.Close()
+		if userAgent != "" {
+			if err := adPage.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent}); err != nil {
+				return nil, err
+			}
+		}
 		wait := adPage.MustWaitNavigation()
+		adPage.MustNavigate(*href)
 		wait()
 		ads = append(ads, adPage.MustInfo().URL)
 	}

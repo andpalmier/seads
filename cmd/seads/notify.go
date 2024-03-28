@@ -74,7 +74,7 @@ func (mn *MailNotifier) SendMessage(message string) error {
 }
 
 // notify creates the message to be sent and sends it using the specified notification services
-func (config *Config) notify(toSend []string) {
+func (config *Config) notify(toSend []ResultAd) {
 	message := createMessage(toSend)
 
 	notifiers := []Notifier{}
@@ -104,18 +104,19 @@ func (config *Config) notify(toSend []string) {
 }
 
 // createMessage assembles the message to be sent over the specified notification channels
-func createMessage(toSend []string) string {
+func createMessage(toSend []ResultAd) string {
 	message := "Here are the \"unexpected domains\" found during the last execution of seads:\n\n " +
 		"Message creation date: " + time.Now().Format(time.DateTime) + "\n\n"
 	for _, s := range toSend {
-		message += s + "\n"
+		m := formatNotification(s)
+		message += m + "\n"
 	}
 	message += "\nThis message was automatically sent by seads (www.github.com/andpalmier/seads)"
 	return message
 }
 
 // formatNotification formats the notification message
-func formatNotification(engineName, searchTerm string, resultAd ResultAd) string {
+func formatNotification(resultAd ResultAd) string {
 	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n",
-		engineName, searchTerm, DefangURL(resultAd.Domain), DefangURL(resultAd.Link))
+		resultAd.Engine, resultAd.Query, DefangURL(resultAd.Domain), DefangURL(resultAd.Link))
 }

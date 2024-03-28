@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
 	"path/filepath"
 	"time"
 )
 
 // getYahooAds searches for ads on Yahoo for a given encoded string
-func getYahooAds(encoded string) ([]string, error) {
+func getYahooAds(encoded string, userAgent string) ([]string, error) {
 	var ads []string
 
 	// Search for chromium path
@@ -44,9 +45,15 @@ func getYahooAds(encoded string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		adPage := browser.MustPage(*href)
+		adPage := browser.MustPage()
 		defer adPage.Close()
+		if userAgent != "" {
+			if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent}); err != nil {
+				return nil, err
+			}
+		}
 		wait := adPage.MustWaitNavigation()
+		adPage.MustNavigate(*href)
 		wait()
 		ads = append(ads, adPage.MustInfo().URL)
 	}

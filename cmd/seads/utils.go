@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"log"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -71,18 +74,18 @@ func ExtractDomainFromURL(inputURL string) (string, error) {
 }
 
 // GetResultAdsFromURLs gets ResultAd list from a list of ads
-func GetResultAdsFromURLs(ads []string) ([]ResultAd, error) {
+func GetResultAdsFromURLs(ads []string, keyword string, se string, time time.Time) ([]ResultAd, error) {
 	var results []ResultAd
 	uniqueAds, err := removeDuplicates(ads)
 	if err != nil {
 		return results, err
 	}
-	for _, ad := range uniqueAds {
-		domain, err := ExtractDomainFromURL(ad)
+	for _, adLink := range uniqueAds {
+		domain, err := ExtractDomainFromURL(adLink)
 		if err != nil {
-			return nil, errors.New("cannot get domain from following URL: " + ad)
+			return nil, errors.New("cannot get domain from following URL: " + adLink)
 		}
-		results = append(results, ResultAd{domain, ad})
+		results = append(results, ResultAd{se, keyword, domain, adLink, time})
 	}
 	return results, nil
 }
@@ -117,8 +120,30 @@ func printUnexpectedDomain(resultAd ResultAd) {
 	}
 }
 
-// searchAds searches ads using a specific engine function
-func searchAds(engineFunc func(string) ([]string, error), query Query, engineName string) []string {
+// export exports results in a file with beautified JSON
+func export(filepath string, allAds []ResultAd) error {
+	// Check if filepath has JSON extension, if not, add it
+	if !strings.HasSuffix(filepath, ".json") {
+		filepath += ".json"
+	}
+
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(allAds)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// searchAds searches ads using a specific search engine function
+func searchAds(engineFunc func(string, string) ([]string, error), query Query, engineName string, userAgent string) ([]ResultAd, error) {
 	encoded := EncodeString(query.SearchTerm)
 
 	adsFoundChan := make(chan []string, *consumers)
@@ -126,7 +151,7 @@ func searchAds(engineFunc func(string) ([]string, error), query Query, engineNam
 
 	searchFunc := func(i int) {
 		defer wg.Done()
-		ads, err := engineFunc(encoded)
+		ads, err := engineFunc(encoded, userAgent)
 		if err != nil {
 			log.Printf("Error searching %s ad: %v", engineName, err)
 			return
@@ -147,5 +172,10 @@ func searchAds(engineFunc func(string) ([]string, error), query Query, engineNam
 		adsFound = append(adsFound, ads...)
 	}
 
-	return adsFound
+	err, ResultAds := GetResultAdsFromURLs(adsFound, query.SearchTerm, engineName, time.Now())
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, ResultAds
 }
