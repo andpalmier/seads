@@ -127,7 +127,7 @@ output example:
 
 ![seads](https://github.com/andpalmier/seads/blob/main/img/seads.gif?raw=true)
 
-screenshots example:q
+screenshot example:
 
 ![seads_bing_ipad](https://github.com/andpalmier/seads/blob/main/img/example-bing-ipad.png?raw=true)
 
