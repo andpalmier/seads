@@ -19,12 +19,15 @@ func getYahooAds(encoded string, userAgent string) ([]string, error) {
 
 	// Create a new Rod browser instance
 	browser := rod.New().ControlURL(u).MustConnect().MustIncognito()
-	page := browser.MustPage()
 	defer browser.MustClose()
 
+	page := browser.MustPage()
 	wait := page.MustWaitNavigation()
 	// Open Yahoo search page and scroll to click "reject cookie" button if present
-	page.MustNavigate(seURLs["Yahoo"] + encoded)
+	pagerr := page.Navigate(seURLs["Yahoo"] + encoded)
+	if pagerr != nil {
+		return nil, pagerr
+	}
 	wait()
 
 	scrollButtons := page.MustElements(`button#scroll-down-btn`)
@@ -49,11 +52,15 @@ func getYahooAds(encoded string, userAgent string) ([]string, error) {
 		defer adPage.Close()
 		if userAgent != "" {
 			if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent}); err != nil {
-				return nil, err
+				continue
 			}
 		}
 		wait := adPage.MustWaitNavigation()
-		adPage.MustNavigate(*href)
+		pagerr = adPage.Navigate(*href)
+		if pagerr != nil {
+			fmt.Printf("\nerror trying to open: %s -> %s\n", *href, pagerr)
+			continue
+		}
 		wait()
 		ads = append(ads, adPage.MustInfo().URL)
 	}

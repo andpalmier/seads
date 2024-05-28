@@ -111,7 +111,7 @@ func createMessage(toSend []ResultAd) string {
 		m := formatNotification(s)
 		message += m + "\n"
 	}
-	message += "\nThis message was automatically sent by seads (www.github.com/andpalmier/seads)"
+	message += "\nThis message was automatically sent by seads (github.com/andpalmier/seads)"
 	return message
 }
 

@@ -19,15 +19,19 @@ func getDuckDuckGoAds(encoded string, userAgent string) ([]string, error) {
 
 	// Create a new Rod browser instance
 	browser := rod.New().ControlURL(u).MustConnect().MustIncognito()
-	page := browser.MustPage()
 	defer browser.MustClose()
+
+	page := browser.MustPage()
 	if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"}); err != nil {
 		return nil, err
 	}
 
 	wait := page.MustWaitNavigation()
 	// Open DuckDuckGo search page and search for encoded string
-	page.MustNavigate(seURLs["DuckDuckGo"] + encoded).MustWaitNavigation()
+	pagerr := page.Navigate(seURLs["DuckDuckGo"] + encoded)
+	if pagerr != nil {
+		return nil, pagerr
+	}
 	time.Sleep(3 * time.Second)
 	wait()
 
@@ -47,11 +51,15 @@ func getDuckDuckGoAds(encoded string, userAgent string) ([]string, error) {
 		defer adPage.Close()
 		if userAgent != "" {
 			if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent}); err != nil {
-				return nil, err
+				continue
 			}
 		}
 		wait := adPage.MustWaitNavigation()
-		adPage.MustNavigate(*href)
+		pagerr = adPage.Navigate(*href)
+		if pagerr != nil {
+			fmt.Printf("\nerror trying to open: %s -> %s\n", *href, pagerr)
+			continue
+		}
 		wait()
 		ads = append(ads, adPage.MustInfo().URL)
 	}
