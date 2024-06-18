@@ -12,7 +12,7 @@ slack:
 
 telegram:
   token: TELEGRAMTOKEN
-  chatid: [CHATID#1,CHATID#2]
+  chatids: [CHATID#1,CHATID#2]
 
 queries:
   - query: "ipad"

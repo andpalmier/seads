@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// Query represents a search query
-type Query struct {
+// SearchQuery represents a search query
+type SearchQuery struct {
 	SearchTerm      string   `yaml:"query"`
 	ExpectedDomains []string `yaml:"expected-domains"`
 }
@@ -16,7 +16,7 @@ type Config struct {
 	TelegramNotifier *TelegramNotifier `yaml:"telegram"`
 	SlackNotifier    *SlackNotifier    `yaml:"slack"`
 	MailNotifier     *MailNotifier     `yaml:"mail"`
-	Queries          []Query           `yaml:"queries"`
+	Queries          []SearchQuery     `yaml:"queries"`
 }
 
 // parseConfig parses the specified config file

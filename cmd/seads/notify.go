@@ -8,20 +8,20 @@ import (
 
 // Notifier interface used for notification channels
 type Notifier interface {
-	SendMessage(message string) error
+	SendNotificationMessage(message string) error
 }
 
-// TelegramNotifier holds configurations for sending the message on Telegram
+// TelegramNotifier holds configurations for sending the message via Telegram
 type TelegramNotifier struct {
-	Token  string   `yaml:"token"`
-	ChatId []string `yaml:"chatid"`
+	Token   string   `yaml:"token"`
+	ChatIDs []string `yaml:"chatids"`
 }
 
-// SendMessage sends the specified message on Telegram
-func (tn *TelegramNotifier) SendMessage(message string) error {
-	chats := tn.ChatId[0]
-	if len(tn.ChatId) > 1 {
-		for _, mr := range tn.ChatId[1:] {
+// SendNotificationMessage sends the specified message via Telegram
+func (tn *TelegramNotifier) SendNotificationMessage(message string) error {
+	chats := tn.ChatIDs[0]
+	if len(tn.ChatIDs) > 1 {
+		for _, mr := range tn.ChatIDs[1:] {
 			chats += "," + mr
 		}
 	}
@@ -30,14 +30,14 @@ func (tn *TelegramNotifier) SendMessage(message string) error {
 	return shoutrrr.Send(url, message)
 }
 
-// SlackNotifier holds configurations for sending the message on Slack
+// SlackNotifier holds configurations for sending the message via Slack
 type SlackNotifier struct {
 	Token    string   `yaml:"token"`
 	Channels []string `yaml:"channels"`
 }
 
-// SendMessage sends the specified message on Slack
-func (sn *SlackNotifier) SendMessage(message string) error {
+// SendNotificationMessage sends the specified message via Slack
+func (sn *SlackNotifier) SendNotificationMessage(message string) error {
 	channels := sn.Channels[0]
 	if len(sn.Channels) > 1 {
 		for _, mr := range sn.Channels[1:] {
@@ -55,13 +55,12 @@ type MailNotifier struct {
 	Port       string   `yaml:"port"`
 	Username   string   `yaml:"username"`
 	Password   string   `yaml:"password"`
-	Auth       string   `yaml:"auth"`
 	From       string   `yaml:"from"`
 	Recipients []string `yaml:"recipients"`
 }
 
-// SendMessage sends the specified message via email
-func (mn *MailNotifier) SendMessage(message string) error {
+// SendNotificationMessage sends the specified message via email
+func (mn *MailNotifier) SendNotificationMessage(message string) error {
 	mailrecipients := mn.Recipients[0]
 	if len(mn.Recipients) > 1 {
 		for _, mr := range mn.Recipients[1:] {
@@ -73,9 +72,9 @@ func (mn *MailNotifier) SendMessage(message string) error {
 	return shoutrrr.Send(url, message)
 }
 
-// notify creates the message to be sent and sends it using the specified notification services
-func (config *Config) notify(toSend []ResultAd) {
-	message := createMessage(toSend)
+// sendNotifications creates the message to be sent and sends it using the specified notification services
+func (config *Config) sendNotifications(adsToNotify []AdResult) {
+	message := createNotificationMessage(adsToNotify)
 
 	notifiers := []Notifier{}
 	if config.SlackNotifier != nil {
@@ -88,35 +87,35 @@ func (config *Config) notify(toSend []ResultAd) {
 		notifiers = append(notifiers, config.MailNotifier)
 	}
 
-	notificationSent := false
+	notificationsSent := false
 
 	for _, notifier := range notifiers {
-		err := notifier.SendMessage(message)
+		err := notifier.SendNotificationMessage(message)
 		if err != nil {
 			fmt.Printf("error sending message via notifier: %v\n", err)
 			continue
 		}
-		notificationSent = true
+		notificationsSent = true
 	}
-	if notificationSent {
+	if notificationsSent {
 		fmt.Println("notifications sent!")
 	}
 }
 
-// createMessage assembles the message to be sent over the specified notification channels
-func createMessage(toSend []ResultAd) string {
-	message := "Here are the \"unexpected domains\" found during the last execution of seads:\n\n " +
+// createNotificationMessage assembles the message to be sent over the specified notification channel
+func createNotificationMessage(toSend []AdResult) string {
+	message := "Here are the \"unexpected domains\" found during the last execution of seads:\n\n" +
 		"Message creation date: " + time.Now().Format(time.DateTime) + "\n\n"
-	for _, s := range toSend {
-		m := formatNotification(s)
-		message += m + "\n"
+	for _, resultAd := range toSend {
+		formattedMessage := formatNotificationMessage(resultAd)
+		message += formattedMessage + "\n"
 	}
 	message += "\nThis message was automatically sent by seads (github.com/andpalmier/seads)"
 	return message
 }
 
-// formatNotification formats the notification message
-func formatNotification(resultAd ResultAd) string {
+// formatNotificationMessage formats the notification message to be sent
+func formatNotificationMessage(resultAd AdResult) string {
 	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n",
-		resultAd.Engine, resultAd.Query, DefangURL(resultAd.Domain), DefangURL(resultAd.Link))
+		resultAd.Engine, resultAd.Query, defangAdURL(resultAd.FinalDomainURL), defangAdURL(resultAd.FinalRedirectURL))
 }
