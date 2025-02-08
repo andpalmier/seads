@@ -5,6 +5,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
+	"github.com/go-rod/stealth"
 	"log"
 	"path/filepath"
 	"sync"
@@ -18,7 +19,8 @@ func initializeBrowser(query, searchEngineURL, userAgent string) (*rod.Browser, 
 	launcherURL := launcher.New().Bin(chromePath).MustLaunch()
 	browser := rod.New().ControlURL(launcherURL).MustConnect().MustIncognito()
 
-	page := browser.MustPage(searchEngineURL + query)
+	page := stealth.MustPage(browser)
+	page.MustNavigate(searchEngineURL + query)
 	if userAgent != "" {
 		err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent})
 		if err != nil {
