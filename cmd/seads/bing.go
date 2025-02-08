@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 // searchBingAds searches for ads on Bing for a given query
 func searchBingAds(query, userAgent string) ([]AdLinkPair, error) {
 
@@ -11,9 +13,10 @@ func searchBingAds(query, userAgent string) ([]AdLinkPair, error) {
 		return nil, err
 	}
 	defer browser.MustClose()
+	time.Sleep(50000000)
 
 	adLinks, err := extractAdLinks(browser, page, userAgent,
-		`li.b_adTop a.b_restorableLink`, "href", "bing", query)
+		`li.b_adTop a[role="link"]`, "href", "bing", query)
 	if err != nil {
 		return nil, err
 	}

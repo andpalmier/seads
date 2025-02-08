@@ -18,7 +18,7 @@ var (
 	outputFilePath      = flag.String("out", "", "path of file containing links of gathered ads")
 	searchEngineURLs    = map[string]string{
 		"Google":     "https://www.google.com/search?q=",
-		"Bing":       "https://www.bing.com/search?q=",
+		"Bing":       "https://www.bing.com/search?form=QBLH&q=",
 		"Yahoo":      "https://search.yahoo.com/search?q=",
 		"DuckDuckGo": "https://duckduckgo.com/?ia=web&q=",
 		"Syndicated": "https://syndicatedsearch.goog/afs/ads?adsafe=medium&adtest=off&adpage=1&channel=ch1&client=amg-informationvine&r=m&hl=en&ie=utf-8&adrep=5&oe=utf-8&type=0&format=p5%7Cn5&ad=n5p5&output=uds_ads_only&v=3&bsl=8&pac=0&u_his=5&uio=--&cont=text-ad-block-0%7Ctext-ad-block-1&rurl=https%3A%2F%2Fwww.ask.com%2Fweb%3F%26o%3D0%26an%3Dorganic%26ad%3DOther%2BSEO%26capLimitBypass%3Dfalse%26qo%3DserpSearchTopBox%26q&q=",

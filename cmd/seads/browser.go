@@ -8,6 +8,7 @@ import (
 	"github.com/go-rod/stealth"
 	"log"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -58,7 +59,8 @@ func extractAdLinks(browser *rod.Browser, page *rod.Page, userAgent, linkSelecto
 
 		wait := adPage.MustWaitNavigation()
 		err = adPage.Navigate(*adURL)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "net::ERR_QUIC_PROTOCOL_ERROR") {
+			log.Println("Error:", err)
 			fmt.Printf("\nerror trying to open: %s -> %s\n", *adURL, err)
 			continue
 		}
