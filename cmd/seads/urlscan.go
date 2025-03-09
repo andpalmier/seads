@@ -52,6 +52,7 @@ func (config *Config) submitURLScan(adsToScan []AdResult, noRedirection bool) {
 	for _, resultAd := range adsToScan {
 		// Create the data payload as a map
 		urlToScan := resultAd.FinalRedirectURL
+
 		if urlToScan == "" || noRedirection {
 			urlToScan = resultAd.OriginalAdURL
 		}

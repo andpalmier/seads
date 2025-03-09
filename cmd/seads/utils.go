@@ -22,6 +22,7 @@ var (
 func removeDuplicateAds(adLinks []AdLinkPair, noRedirectionFlag bool) ([]AdLinkPair, error) {
 	var uniqueAdLinks []AdLinkPair
 	seenDomains := make(map[string]struct{})
+	seenURLs := make(map[string]struct{})
 
 	// Normalize the URL to avoid duplicates
 	var normalizedAdURL string
@@ -42,6 +43,14 @@ func removeDuplicateAds(adLinks []AdLinkPair, noRedirectionFlag bool) ([]AdLinkP
 		if _, seen := seenDomains[adDomain]; !seen {
 			uniqueAdLinks = append(uniqueAdLinks, adLink)
 			seenDomains[adDomain] = struct{}{}
+		}
+
+		// If no redirection flag is set, we only want to see the original ad URL
+		if noRedirectionFlag {
+			if _, seen := seenURLs[adLink.OriginalAdURL]; !seen {
+				uniqueAdLinks = append(uniqueAdLinks, adLink)
+				seenURLs[adLink.OriginalAdURL] = struct{}{}
+			}
 		}
 	}
 	return uniqueAdLinks, nil
