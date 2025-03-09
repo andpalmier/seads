@@ -5,7 +5,7 @@ import (
 )
 
 // searchYahooAds searches for ads on Yahoo for a given encoded string
-func searchYahooAds(query, userAgent string) ([]AdLinkPair, error) {
+func searchYahooAds(query, userAgent string, noRedirectionFlag bool) ([]AdLinkPair, error) {
 	browser, page, err := initializeBrowser(query, searchEngineURLs["Yahoo"], "")
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func searchYahooAds(query, userAgent string) ([]AdLinkPair, error) {
 	handleYahooPageInteraction(page)
 
 	adLinks, err := extractAdLinks(browser, page, userAgent,
-		`ol.searchCenterTopAds a[data-matarget="ad"]`, "href", "yahoo", query)
+		`ol.searchCenterTopAds a[data-matarget="ad"]`, "href", "yahoo", query, noRedirectionFlag)
 	if err != nil {
 		return nil, err
 	}

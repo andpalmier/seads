@@ -16,7 +16,11 @@ var (
 	printRedirectChain  = flag.Bool("redirect", false, "print redirection chain")
 	userAgentString     = flag.String("ua", "", "User-Agent string to be used to click on ads")
 	outputFilePath      = flag.String("out", "", "path of file containing links of gathered ads")
-	searchEngineURLs    = map[string]string{
+	enableURLScan       = flag.Bool("urlscan", false, "submit url to urlscan.io for analysis")
+	noRedirection       = flag.Bool("noredirection", false, "do not follow redirection, if URLScan submit link to resolve by URLScan instead")
+	htmlPath            = flag.String("html", "", "path to store search engine result html page (if empty, the htmlPath feature will be disabled)")
+
+	searchEngineURLs = map[string]string{
 		"Google":     "https://www.google.com/search?q=",
 		"Bing":       "https://www.bing.com/search?form=QBLH&q=",
 		"Yahoo":      "https://search.yahoo.com/search?q=",
@@ -35,13 +39,14 @@ var (
 // SearchEngineFunction holds the search engine name and its corresponding function
 type SearchEngineFunction struct {
 	EngineName     string
-	SearchFunction func(string, string) ([]AdLinkPair, error)
+	SearchFunction func(string, string, bool) ([]AdLinkPair, error)
 }
 
 // AdResult contains information regarding an ad found
 type AdResult struct {
 	Engine           string    `json:"engine"`
 	Query            string    `json:"query"`
+	OriginalAdURL    string    `json:"OriginalAdURL"`
 	FinalDomainURL   string    `json:"final-domain-url"`
 	FinalRedirectURL string    `json:"final-redirect-url"`
 	RedirectChain    []string  `json:"redirect-chain"`
@@ -55,46 +60,61 @@ type AdLinkPair struct {
 }
 
 // performAdSearch return the ads found in the search engines for the specified config
-func performAdSearch(config Config) ([]AdResult, []AdResult, error) {
+func performAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) {
 	var notifications []AdResult
 	var allAdResults []AdResult
+	var submitToURLScan []AdResult
+
 	for _, searchQuery := range config.Queries {
-		fmt.Printf("\nSearching for: '%s'\n", searchQuery.SearchTerm)
+		log.Printf("\nSearching for: '%s'\n", searchQuery.SearchTerm)
 
 		for _, engine := range searchEnginesFunctions {
-			adResults, err := searchAdsWithEngine(engine.SearchFunction, searchQuery, engine.EngineName, *userAgentString)
+			log.Printf("Search Engine Lookup using '%s' for keyword '%s'", engine.EngineName, searchQuery.SearchTerm)
+			adResults, err := searchAdsWithEngine(engine.SearchFunction, searchQuery, engine.EngineName, *userAgentString, *noRedirection)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
-			fmt.Printf("\n* %s ads for '%s': ",
-				engine.EngineName, searchQuery.SearchTerm)
 			if len(adResults) == 0 {
 				italic.Println("no ads found")
 			} else {
-				fmt.Printf("\n")
 				for _, adResult := range adResults {
 					allAdResults = append(allAdResults, adResult)
-					if isDomainExpected(adResult.FinalDomainURL, searchQuery.ExpectedDomains) {
-						printExpectedDomainInfo(adResult)
-					} else {
-						printUnexpectedDomainInfo(adResult)
-						if *enableNotifications {
-							notifications = append(notifications, adResult)
+
+					if *noRedirection {
+						if *enableURLScan {
+							submitToURLScan = append(submitToURLScan, adResult)
+						} else {
+							log.Printf("noRedirection without URLScan enable. Skipping: %s", adResult.OriginalAdURL)
 						}
-					}
-					if *printRedirectChain {
-						printRedirectionChain(adResult.RedirectChain)
+					} else {
+						if isDomainExpected(adResult.FinalDomainURL, searchQuery.ExpectedDomains) {
+							printExpectedDomainInfo(adResult)
+						} else {
+							printUnexpectedDomainInfo(adResult)
+							if *enableNotifications {
+								notifications = append(notifications, adResult)
+							}
+							if *enableURLScan {
+								submitToURLScan = append(submitToURLScan, adResult)
+							}
+						}
+						if *printRedirectChain {
+							printRedirectionChain(adResult.RedirectChain)
+						}
 					}
 				}
 			}
 		}
 	}
-	return allAdResults, notifications, nil
+	return allAdResults, notifications, submitToURLScan, nil
 }
 
 func main() {
 
 	flag.Parse()
+	if *enableURLScan {
+		fmt.Println("URLScan Enable")
+	}
 
 	config, err := parseConfig(*configFilePath)
 	if err != nil {
@@ -105,7 +125,7 @@ func main() {
 		log.Fatalf("error parsing config file: %v\n", err)
 	}
 
-	allAdResults, notifications, err := performAdSearch(config)
+	allAdResults, notifications, submitToURLScan, err := performAdSearch(config)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -123,6 +143,11 @@ func main() {
 	if *enableNotifications && len(notifications) > 0 {
 		fmt.Println()
 		config.sendNotifications(notifications)
+	}
+
+	// Submit domain to URLScan
+	if *enableURLScan && len(submitToURLScan) > 0 {
+		config.submitURLScan(submitToURLScan, *noRedirection)
 	}
 
 	fmt.Println()

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"gopkg.in/yaml.v2"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 // SearchQuery represents a search query
@@ -16,6 +17,7 @@ type Config struct {
 	TelegramNotifier *TelegramNotifier `yaml:"telegram"`
 	SlackNotifier    *SlackNotifier    `yaml:"slack"`
 	MailNotifier     *MailNotifier     `yaml:"mail"`
+	URLScanSubmitter *URLScanSubmitter `yaml:"urlscan"`
 	Queries          []SearchQuery     `yaml:"queries"`
 }
 

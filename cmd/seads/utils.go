@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 var (
@@ -18,12 +19,20 @@ var (
 )
 
 // removeDuplicateAds removes ads with same domain from the given list
-func removeDuplicateAds(adLinks []AdLinkPair) ([]AdLinkPair, error) {
+func removeDuplicateAds(adLinks []AdLinkPair, noRedirectionFlag bool) ([]AdLinkPair, error) {
 	var uniqueAdLinks []AdLinkPair
 	seenDomains := make(map[string]struct{})
 
+	// Normalize the URL to avoid duplicates
+	var normalizedAdURL string
 	for _, adLink := range adLinks {
-		normalizedAdURL := normalizeURL(adLink.FinalAdURL)
+		// With noredirection flag, pick the original url
+		if noRedirectionFlag {
+			normalizedAdURL = normalizeURL(adLink.OriginalAdURL)
+		} else {
+			normalizedAdURL = normalizeURL(adLink.FinalAdURL)
+		}
+
 		parsedURL, err := url.Parse(normalizedAdURL)
 		if err != nil {
 			return nil, err
@@ -73,10 +82,9 @@ func extractDomain(inputURL string) (string, error) {
 }
 
 // generateAdResults gets AdResult list from a list of ad
-func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineName string,
-	time time.Time) ([]AdResult, error) {
+func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineName string, time time.Time, noRedirectionFlag bool) ([]AdResult, error) {
 	var adResults []AdResult
-	uniqueAdLinks, err := removeDuplicateAds(adLinks)
+	uniqueAdLinks, err := removeDuplicateAds(adLinks, noRedirectionFlag)
 	if err != nil {
 		return adResults, err
 	}
@@ -85,9 +93,17 @@ func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineN
 		if err != nil {
 			return nil, errors.New("cannot get domain from following URL: " + adLink.FinalAdURL)
 		}
-		redirectChain, _ := findRedirectionChain(adLink.OriginalAdURL, *userAgentString)
-		adResults = append(adResults, AdResult{searchEngineName, searchKeyword, domain,
-			adLink.FinalAdURL, redirectChain, time})
+		if noRedirectionFlag {
+			fmt.Printf("noRedirectionFlag is set, skip following redirection chain")
+			adResults = append(adResults, AdResult{searchEngineName, searchKeyword, adLink.OriginalAdURL, domain,
+				adLink.FinalAdURL, nil, time})
+
+		} else {
+			redirectChain, _ := findRedirectionChain(adLink.OriginalAdURL, *userAgentString)
+			adResults = append(adResults, AdResult{searchEngineName, searchKeyword, adLink.OriginalAdURL, domain,
+				adLink.FinalAdURL, redirectChain, time})
+		}
+
 	}
 	return adResults, nil
 }
