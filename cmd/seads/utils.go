@@ -172,6 +172,11 @@ func beginsWithHTTP(value string) bool {
 	return strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://")
 }
 
+// Function to check if a hostname ends with a given domain
+func checkHostnameEndsWithDomain(hostname, domain string) bool {
+	return strings.HasSuffix(hostname, domain)
+}
+
 // Function to decode a Base64 string (returns empty string if decoding fails)
 func decodeBase64(encoded string) string {
 	decodedBytes, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(encoded)
@@ -213,6 +218,12 @@ func isAdsExpected(ads string, expectedDomains []string) bool {
 
 					// If Ads host matches exceptedDomain, return function with true
 					if currentHost == expectedDomain {
+						log.Printf("URL excluded by expected hostname: %s\n", expectedDomain)
+						return true
+					}
+
+					// If Ads host matches exceptedDomain, return function with true
+					if checkHostnameEndsWithDomain(currentHost, expectedDomain) {
 						log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
 						return true
 					}
@@ -251,6 +262,19 @@ func isAdsExpected(ads string, expectedDomains []string) bool {
 							return true
 						}
 
+						// If Ads host matches exceptedDomain, return function with true
+						if checkHostnameEndsWithDomain(decodedHost, expectedDomain) {
+							log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+							return true
+						}
+
+						// If Ads host matches exceptedDomain, return function with true
+						if checkHostnameEndsWithDomain(decodedHost, expectedDomain) {
+							log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+							return true
+						}
+
+						// Parse on base64 encoded from ad.doubleclick.net
 						if decodedHost == "ad.doubleclick.net" {
 							// Parse the URL
 							adsParsedURL, err := url.Parse(decodedUnescapedURL)
@@ -278,6 +302,12 @@ func isAdsExpected(ads string, expectedDomains []string) bool {
 										// If Ads host matches exceptedDomain, return function with true
 										if currentAdsValueHost == expectedDomain {
 											log.Printf("URL excluded by expected domain found after decode: %s\n", expectedDomain)
+											return true
+										}
+
+										// If Ads host matches exceptedDomain, return function with true
+										if checkHostnameEndsWithDomain(currentAdsValueHost, expectedDomain) {
+											log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
 											return true
 										}
 									}
