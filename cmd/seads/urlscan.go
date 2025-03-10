@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // URLScanSubmitter holds configurations for sending URL with unexpected domain to URLScan
@@ -126,5 +127,8 @@ func (config *Config) submitURLScan(adsToScan []AdResult) {
 			log.Println("Country:", response.Country)
 			log.Println("*************************")
 		}
+		log.Println(("Two seconds delay between sending"))
+		time.Sleep(2 * time.Second)
+
 	}
 }

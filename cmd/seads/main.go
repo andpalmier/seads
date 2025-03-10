@@ -147,9 +147,13 @@ func main() {
 	}
 
 	// Submit domain to URLScan
-	if *enableURLScan && len(submitToURLScan) > 0 {
-		fmt.Println("Total URLs for submission: ", len(submitToURLScan))
-		config.submitURLScan(submitToURLScan)
+	if *enableURLScan {
+		if len(submitToURLScan) > 0 {
+			fmt.Println("Total URLs for submission: ", len(submitToURLScan))
+			config.submitURLScan(submitToURLScan)
+		} else {
+			fmt.Println("URLScan enabled with no possible submission")
+		}
 	}
 
 	fmt.Println()
