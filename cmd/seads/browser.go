@@ -78,7 +78,6 @@ func extractAdLinks(browser *rod.Browser, page *rod.Page, userAgent, linkSelecto
 
 		// If no redirection is required, skip navigating to the advertisement
 		if noRedirectionFlag {
-			log.Printf("\tnoRedirectionFlag is set, skip navigate to advertisement: %v", *adURL)
 			adLinks = append(adLinks, AdLinkPair{
 				OriginalAdURL: *adURL,
 				FinalAdURL:    "",

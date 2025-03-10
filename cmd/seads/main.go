@@ -77,25 +77,32 @@ func performAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) 
 			if len(adResults) == 0 {
 				italic.Println("no ads found")
 			} else {
-				fmt.Println("Total Ads: ", len(adResults))
 				for _, adResult := range adResults {
 					allAdResults = append(allAdResults, adResult)
 					if *enableURLScan {
-						submitToURLScan = append(submitToURLScan, adResult)
-					}
-					if isDomainExpected(adResult.FinalDomainURL, searchQuery.ExpectedDomains) {
-						printExpectedDomainInfo(adResult)
-					} else {
-						printUnexpectedDomainInfo(adResult)
-						if *enableNotifications {
-							notifications = append(notifications, adResult)
+						if *noRedirection {
+							// parse ads
+							if !isAdsExpected(adResult.OriginalAdURL, searchQuery.ExpectedDomains) {
+								log.Printf("\nURL's domain not on expectedDomain: '%s'\n", searchQuery.ExpectedDomains)
+								submitToURLScan = append(submitToURLScan, adResult)
+							}
+						} else {
+							submitToURLScan = append(submitToURLScan, adResult)
 						}
+					} else {
+						if isDomainExpected(adResult.FinalDomainURL, searchQuery.ExpectedDomains) {
+							printExpectedDomainInfo(adResult)
+						} else {
+							printUnexpectedDomainInfo(adResult)
+							if *enableNotifications {
+								notifications = append(notifications, adResult)
+							}
 
+						}
+						if *printRedirectChain {
+							printRedirectionChain(adResult.RedirectChain)
+						}
 					}
-					if *printRedirectChain {
-						printRedirectionChain(adResult.RedirectChain)
-					}
-
 				}
 			}
 		}
@@ -142,7 +149,7 @@ func main() {
 	// Submit domain to URLScan
 	if *enableURLScan && len(submitToURLScan) > 0 {
 		fmt.Println("Total URLs for submission: ", len(submitToURLScan))
-		config.submitURLScan(submitToURLScan, *noRedirection)
+		config.submitURLScan(submitToURLScan)
 	}
 
 	fmt.Println()

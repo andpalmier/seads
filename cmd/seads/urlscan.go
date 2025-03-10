@@ -34,8 +34,24 @@ type Options struct {
 	UserAgent string `json:"useragent"`
 }
 
+// Deduplicate URLs
+func deduplicateURLs(adsToScan []AdResult) []string {
+	var uniqueAdLinks []string
+	seenURLs := make(map[string]struct{})
+	for _, ads := range adsToScan {
+		if _, seen := seenURLs[ads.OriginalAdURL]; !seen {
+			uniqueAdLinks = append(uniqueAdLinks, ads.OriginalAdURL)
+			seenURLs[ads.OriginalAdURL] = struct{}{}
+		}
+	}
+
+	return uniqueAdLinks
+}
+
 // SubmitURLScan submits the URL to URLScan for scanning
-func (config *Config) submitURLScan(adsToScan []AdResult, noRedirection bool) {
+func (config *Config) submitURLScan(adsToScan []AdResult) {
+	uniqueAdLinks := deduplicateURLs(adsToScan)
+
 	token := config.URLScanSubmitter.Token
 	url := config.URLScanSubmitter.ScanURL
 	tags := config.URLScanSubmitter.Tags
@@ -49,13 +65,10 @@ func (config *Config) submitURLScan(adsToScan []AdResult, noRedirection bool) {
 	fmt.Printf("Tags: %v\n", tags)
 	fmt.Println()
 
-	for _, resultAd := range adsToScan {
-		// Create the data payload as a map
-		urlToScan := resultAd.FinalRedirectURL
+	fmt.Println("Total URLs to submit: %d", len(uniqueAdLinks))
 
-		if urlToScan == "" || noRedirection {
-			urlToScan = resultAd.OriginalAdURL
-		}
+	for _, urlToScan := range uniqueAdLinks {
+		// Create the data payload as a map
 		log.Printf("URL for submission: %s", urlToScan)
 
 		data := map[string]interface{}{

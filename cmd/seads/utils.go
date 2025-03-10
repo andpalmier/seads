@@ -103,7 +103,6 @@ func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineN
 			return nil, errors.New("cannot get domain from following URL: " + adLink.FinalAdURL)
 		}
 		if noRedirectionFlag {
-			fmt.Printf("noRedirectionFlag is set, skip following redirection chain")
 			adResults = append(adResults, AdResult{searchEngineName, searchKeyword, adLink.OriginalAdURL, domain,
 				adLink.FinalAdURL, nil, time})
 
@@ -164,4 +163,56 @@ func exportAdResults(filepath string, allAds []AdResult) error {
 		return err
 	}
 	return nil
+}
+
+// Function to check if a string begins with "http" or "https"
+func beginsWithHTTP(value string) bool {
+	return strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://")
+}
+
+func isAdsExpected(ads string, expectedDomains []string) bool {
+	for _, expectedDomain := range expectedDomains {
+		adsURL, _ := url.QueryUnescape(ads) // Unescape any encoded characters
+
+		// Parse the URL
+		parsedURL, err := url.Parse(adsURL)
+		if err != nil {
+			fmt.Printf("Skipping invalid URL: %s, Error: %v\n", adsURL, err)
+			continue
+		}
+
+		// Extract query parameters
+		queryParams := parsedURL.Query()
+
+		// Check for HTTP values in query parameters
+		for key, values := range queryParams {
+			for _, value := range values {
+				if beginsWithHTTP(value) {
+					// Parse the URL
+					currentParsedURL, err := url.Parse(value)
+					if err != nil {
+						fmt.Printf("Skipping invalid URL: %s, Error: %v\n", currentParsedURL, err)
+						continue
+					}
+
+					// Ads host
+					currentHost := currentParsedURL.Host
+					currentHost = strings.TrimPrefix(currentHost, "www.")
+
+					// If Ads host matches exceptedDomain, return function with true
+					if currentHost == expectedDomain {
+						return true
+					}
+				}
+
+				// Exception on DDG ad_domain
+				if key == "ad_domain" && strings.HasPrefix(ads, "https://duckduckgo.com") {
+					if value == expectedDomain {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }
