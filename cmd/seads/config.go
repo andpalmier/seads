@@ -12,13 +12,18 @@ type SearchQuery struct {
 	ExpectedDomains []string `yaml:"expected-domains"`
 }
 
+type GlobalDomainExclusion struct {
+	GlobalDomainExclusionList []string `yaml:"exclusion-list"`
+}
+
 // Config holds the overall configuration
 type Config struct {
-	TelegramNotifier *TelegramNotifier `yaml:"telegram"`
-	SlackNotifier    *SlackNotifier    `yaml:"slack"`
-	MailNotifier     *MailNotifier     `yaml:"mail"`
-	URLScanSubmitter *URLScanSubmitter `yaml:"urlscan"`
-	Queries          []SearchQuery     `yaml:"queries"`
+	TelegramNotifier      *TelegramNotifier      `yaml:"telegram"`
+	SlackNotifier         *SlackNotifier         `yaml:"slack"`
+	MailNotifier          *MailNotifier          `yaml:"mail"`
+	URLScanSubmitter      *URLScanSubmitter      `yaml:"urlscan"`
+	GlobalDomainExclusion *GlobalDomainExclusion `yaml:"global-domain-exclusion"`
+	Queries               []SearchQuery          `yaml:"queries"`
 }
 
 // parseConfig parses the specified config file

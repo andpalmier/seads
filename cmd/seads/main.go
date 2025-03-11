@@ -65,7 +65,12 @@ func performAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) 
 	var allAdResults []AdResult
 	var submitToURLScan []AdResult
 
+	// Get global domain exclusion list
+	globalDomainExclusionList := []string(config.GlobalDomainExclusion.GlobalDomainExclusionList)
+
 	for _, searchQuery := range config.Queries {
+		// Merge expected/exclusion individual expected domain with global domain lists
+		expectedDomainList := mergetwoListsReturnUnique(globalDomainExclusionList, searchQuery.ExpectedDomains)
 		log.Printf("\nSearching for: '%s'\n", searchQuery.SearchTerm)
 
 		for _, engine := range searchEnginesFunctions {
@@ -82,15 +87,15 @@ func performAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) 
 					if *enableURLScan {
 						if *noRedirection {
 							// parse ads
-							if !isAdsExpected(adResult.OriginalAdURL, searchQuery.ExpectedDomains) {
-								log.Printf("\nURL's domain not on expectedDomain: '%s'\n", searchQuery.ExpectedDomains)
+							if !isAdsExpected(adResult.OriginalAdURL, expectedDomainList) {
+								log.Printf("\nURL's domain not on expectedDomain: '%s'\n", expectedDomainList)
 								submitToURLScan = append(submitToURLScan, adResult)
 							}
 						} else {
 							submitToURLScan = append(submitToURLScan, adResult)
 						}
 					} else {
-						if isDomainExpected(adResult.FinalDomainURL, searchQuery.ExpectedDomains) {
+						if isDomainExpected(adResult.FinalDomainURL, expectedDomainList) {
 							printExpectedDomainInfo(adResult)
 						} else {
 							printUnexpectedDomainInfo(adResult)

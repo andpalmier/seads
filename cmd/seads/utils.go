@@ -323,3 +323,27 @@ func isAdsExpected(ads string, expectedDomains []string) bool {
 	}
 	return false
 }
+
+// Merge two lists. Return unique value of the list
+func mergeListReturnUnique(first_list []string, second_list []string) []string {
+	uniqueMap := make(map[string]bool)
+	var result []string // unique list
+
+	// iterate first list
+	for _, item := range first_list {
+		if _, exists := uniqueMap[item]; !exists {
+			uniqueMap[item] = true
+			result = append(result, item)
+		}
+	}
+
+	// iterate second list
+	for _, item := range second_list {
+		if _, exists := uniqueMap[item]; !exists {
+			uniqueMap[item] = true
+			result = append(result, item)
+		}
+	}
+
+	return result
+}

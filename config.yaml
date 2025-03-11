@@ -20,6 +20,9 @@ urlscan:
   visibility: "private" # public, unlisted, private
   tags: "private.mytag" # comma separated list of tags
 
+global-domain-exclusion:
+  exclusion-list: [ebay.com, lazada.sg]
+
 queries:
   - query: "ipad"
     expected-domains: [apple.com, amazon.com]
