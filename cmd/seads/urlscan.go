@@ -66,7 +66,7 @@ func (config *Config) submitURLScan(adsToScan []AdResult) {
 	fmt.Printf("Tags: %v\n", tags)
 	fmt.Println()
 
-	fmt.Println("Total URLs to submit: %d", len(uniqueAdLinks))
+	fmt.Printf("Total URLs to submit: %d\n", len(uniqueAdLinks))
 
 	for _, urlToScan := range uniqueAdLinks {
 		// Create the data payload as a map

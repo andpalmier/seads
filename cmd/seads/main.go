@@ -70,7 +70,7 @@ func performAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) 
 
 	for _, searchQuery := range config.Queries {
 		// Merge expected/exclusion individual expected domain with global domain lists
-		expectedDomainList := mergetwoListsReturnUnique(globalDomainExclusionList, searchQuery.ExpectedDomains)
+		expectedDomainList := mergeTwoListsReturnUnique(globalDomainExclusionList, searchQuery.ExpectedDomains)
 		log.Printf("\nSearching for: '%s'\n", searchQuery.SearchTerm)
 
 		for _, engine := range searchEnginesFunctions {

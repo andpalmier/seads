@@ -325,7 +325,7 @@ func isAdsExpected(ads string, expectedDomains []string) bool {
 }
 
 // Merge two lists. Return unique value of the list
-func mergeListReturnUnique(first_list []string, second_list []string) []string {
+func mergeTwoListsReturnUnique(first_list []string, second_list []string) []string {
 	uniqueMap := make(map[string]bool)
 	var result []string // unique list
 
