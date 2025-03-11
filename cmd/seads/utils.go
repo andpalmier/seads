@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
+	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 var (
@@ -18,12 +21,21 @@ var (
 )
 
 // removeDuplicateAds removes ads with same domain from the given list
-func removeDuplicateAds(adLinks []AdLinkPair) ([]AdLinkPair, error) {
+func removeDuplicateAds(adLinks []AdLinkPair, noRedirectionFlag bool) ([]AdLinkPair, error) {
 	var uniqueAdLinks []AdLinkPair
 	seenDomains := make(map[string]struct{})
+	seenURLs := make(map[string]struct{})
 
+	// Normalize the URL to avoid duplicates
+	var normalizedAdURL string
 	for _, adLink := range adLinks {
-		normalizedAdURL := normalizeURL(adLink.FinalAdURL)
+		// With noredirection flag, pick the original url
+		if noRedirectionFlag {
+			normalizedAdURL = normalizeURL(adLink.OriginalAdURL)
+		} else {
+			normalizedAdURL = normalizeURL(adLink.FinalAdURL)
+		}
+
 		parsedURL, err := url.Parse(normalizedAdURL)
 		if err != nil {
 			return nil, err
@@ -33,6 +45,14 @@ func removeDuplicateAds(adLinks []AdLinkPair) ([]AdLinkPair, error) {
 		if _, seen := seenDomains[adDomain]; !seen {
 			uniqueAdLinks = append(uniqueAdLinks, adLink)
 			seenDomains[adDomain] = struct{}{}
+		}
+
+		// If no redirection flag is set, we only want to see the original ad URL
+		if noRedirectionFlag {
+			if _, seen := seenURLs[adLink.OriginalAdURL]; !seen {
+				uniqueAdLinks = append(uniqueAdLinks, adLink)
+				seenURLs[adLink.OriginalAdURL] = struct{}{}
+			}
 		}
 	}
 	return uniqueAdLinks, nil
@@ -73,10 +93,9 @@ func extractDomain(inputURL string) (string, error) {
 }
 
 // generateAdResults gets AdResult list from a list of ad
-func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineName string,
-	time time.Time) ([]AdResult, error) {
+func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineName string, time time.Time, noRedirectionFlag bool) ([]AdResult, error) {
 	var adResults []AdResult
-	uniqueAdLinks, err := removeDuplicateAds(adLinks)
+	uniqueAdLinks, err := removeDuplicateAds(adLinks, noRedirectionFlag)
 	if err != nil {
 		return adResults, err
 	}
@@ -85,9 +104,16 @@ func generateAdResults(adLinks []AdLinkPair, searchKeyword string, searchEngineN
 		if err != nil {
 			return nil, errors.New("cannot get domain from following URL: " + adLink.FinalAdURL)
 		}
-		redirectChain, _ := findRedirectionChain(adLink.OriginalAdURL, *userAgentString)
-		adResults = append(adResults, AdResult{searchEngineName, searchKeyword, domain,
-			adLink.FinalAdURL, redirectChain, time})
+		if noRedirectionFlag {
+			adResults = append(adResults, AdResult{searchEngineName, searchKeyword, adLink.OriginalAdURL, domain,
+				adLink.FinalAdURL, nil, time})
+
+		} else {
+			redirectChain, _ := findRedirectionChain(adLink.OriginalAdURL, *userAgentString)
+			adResults = append(adResults, AdResult{searchEngineName, searchKeyword, adLink.OriginalAdURL, domain,
+				adLink.FinalAdURL, redirectChain, time})
+		}
+
 	}
 	return adResults, nil
 }
@@ -139,4 +165,185 @@ func exportAdResults(filepath string, allAds []AdResult) error {
 		return err
 	}
 	return nil
+}
+
+// Function to check if a string begins with "http" or "https"
+func beginsWithHTTP(value string) bool {
+	return strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://")
+}
+
+// Function to check if a hostname ends with a given domain
+func checkHostnameEndsWithDomain(hostname, domain string) bool {
+	return strings.HasSuffix(hostname, domain)
+}
+
+// Function to decode a Base64 string (returns empty string if decoding fails)
+func decodeBase64(encoded string) string {
+	decodedBytes, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(encoded)
+	if err != nil {
+		return "" // Return empty string if decoding fails
+	}
+	return string(decodedBytes)
+}
+
+func isAdsExpected(ads string, expectedDomains []string) bool {
+	for _, expectedDomain := range expectedDomains {
+		adsURL, _ := url.QueryUnescape(ads) // Unescape any encoded characters
+
+		// Parse the URL
+		parsedURL, err := url.Parse(adsURL)
+		if err != nil {
+			fmt.Printf("Skipping invalid URL: %s, Error: %v\n", adsURL, err)
+			continue
+		}
+
+		// Extract query parameters
+		queryParams := parsedURL.Query()
+
+		// Check for HTTP values in query parameters
+		for key, values := range queryParams {
+
+			for _, value := range values {
+				if beginsWithHTTP(value) {
+					// Parse the URL
+					currentParsedURL, err := url.Parse(value)
+					if err != nil {
+						fmt.Printf("Skipping invalid URL: %s, Error: %v\n", currentParsedURL, err)
+						continue
+					}
+
+					// Ads host
+					currentHost := currentParsedURL.Host
+					currentHost = strings.TrimPrefix(currentHost, "www.")
+
+					// If Ads host matches exceptedDomain, return function with true
+					if currentHost == expectedDomain {
+						log.Printf("URL excluded by expected hostname: %s\n", expectedDomain)
+						return true
+					}
+
+					// If Ads host matches exceptedDomain, return function with true
+					if checkHostnameEndsWithDomain(currentHost, expectedDomain) {
+						log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+						return true
+					}
+				}
+
+				// Exception on DDG ad_domain
+				if key == "ad_domain" && strings.HasPrefix(ads, "https://duckduckgo.com") {
+					if value == expectedDomain {
+						log.Printf("URL excluded by expected domain in DDG URL: %s\n", expectedDomain)
+						return true
+					}
+				}
+
+				// from Bing with destination in base64 encode
+				if key == "u" && strings.HasPrefix(ads, "https://www.bing.com") {
+					decodedURL := decodeBase64(value)
+					decodedUnescapedURL, err := url.QueryUnescape(decodedURL)
+					if err != nil {
+						fmt.Printf("Skipping invalid URL: %s, Error: %v\n", decodedURL, err)
+						continue
+					}
+					if decodedUnescapedURL != "" && beginsWithHTTP(decodedUnescapedURL) {
+						// Parse the URL
+						decodedParsedURL, err := url.Parse(decodedUnescapedURL)
+						if err != nil {
+							fmt.Printf("Skipping invalid URL: %s, Error: %v\n", decodedParsedURL, err)
+							continue
+						}
+
+						// Ads host
+						decodedHost := decodedParsedURL.Host
+						decodedHost = strings.TrimPrefix(decodedHost, "www.")
+
+						if decodedHost == expectedDomain {
+							log.Printf("URL excluded by expected domain found after decode: %s\n", expectedDomain)
+							return true
+						}
+
+						// If Ads host matches exceptedDomain, return function with true
+						if checkHostnameEndsWithDomain(decodedHost, expectedDomain) {
+							log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+							return true
+						}
+
+						// If Ads host matches exceptedDomain, return function with true
+						if checkHostnameEndsWithDomain(decodedHost, expectedDomain) {
+							log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+							return true
+						}
+
+						// Parse on base64 encoded from ad.doubleclick.net
+						if decodedHost == "ad.doubleclick.net" {
+							// Parse the URL
+							adsParsedURL, err := url.Parse(decodedUnescapedURL)
+							if err != nil {
+								fmt.Printf("Skipping invalid URL: %s, Error: %v\n", decodedUnescapedURL, err)
+								continue
+							}
+							adsQueryParams := adsParsedURL.Query()
+
+							// Check for HTTP values in query parameters
+							for _, adsQueryValues := range adsQueryParams {
+								for _, adsQueryvalue := range adsQueryValues {
+									if beginsWithHTTP(adsQueryvalue) {
+										// Parse the URL
+										currentAdsQueryParsedURL, err := url.Parse(adsQueryvalue)
+										if err != nil {
+											fmt.Printf("Skipping invalid URL: %s, Error: %v\n", adsQueryvalue, err)
+											continue
+										}
+
+										// Ads host
+										currentAdsValueHost := currentAdsQueryParsedURL.Host
+										currentAdsValueHost = strings.TrimPrefix(currentAdsValueHost, "www.")
+
+										// If Ads host matches exceptedDomain, return function with true
+										if currentAdsValueHost == expectedDomain {
+											log.Printf("URL excluded by expected domain found after decode: %s\n", expectedDomain)
+											return true
+										}
+
+										// If Ads host matches exceptedDomain, return function with true
+										if checkHostnameEndsWithDomain(currentAdsValueHost, expectedDomain) {
+											log.Printf("URL excluded by expected domain: %s\n", expectedDomain)
+											return true
+										}
+									}
+								}
+							}
+						}
+
+					}
+
+				}
+			}
+		}
+	}
+	return false
+}
+
+// Merge two lists. Return unique value of the list
+func mergeTwoListsReturnUnique(first_list []string, second_list []string) []string {
+	uniqueMap := make(map[string]bool)
+	var result []string // unique list
+
+	// iterate first list
+	for _, item := range first_list {
+		if _, exists := uniqueMap[item]; !exists {
+			uniqueMap[item] = true
+			result = append(result, item)
+		}
+	}
+
+	// iterate second list
+	for _, item := range second_list {
+		if _, exists := uniqueMap[item]; !exists {
+			uniqueMap[item] = true
+			result = append(result, item)
+		}
+	}
+
+	return result
 }

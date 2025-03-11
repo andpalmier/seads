@@ -1,3 +1,5 @@
+# Original from https://github.com/andpalmier/seads
+
 # seads - Search Engine ADs Scanner
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -19,6 +21,7 @@ For a comprehensive guide on how to use `seads`, please refer to [this blog post
 - **Export in JSON**: Export results of the execution in JSON format.
 - **Multiple User-Agent support**: Provide your User-Agent string to click ads found in search engines.
 - **Redirect chain detection**: Tracks URLs through redirects to detect and log chains. 
+- **URLScan submission**: Submit to URLScan using API key.
 
 ## Known limitations:
 - Due to the nature of search engine ads, a single search may not reveal all ads. Using concurrent headless browsers might slow down detection but ensures comprehensive ad gathering.
@@ -53,7 +56,7 @@ You can run `seads` with the following flags:
 
 ```
   -config string (REQUIRED)
-    	path to config file (default "config.yaml")
+      path to config file (default "config.yaml")
   -concurrency int
     	number of concurrent headless browsers (default 4)
   -cleanlinks
@@ -61,19 +64,31 @@ You can run `seads` with the following flags:
   -notify
     	notify if unexpected domains are found
   -out
-        path of JSON file containing links of gathered ads
+      path of JSON file containing links of gathered ads
   -screenshot string
     	path to store screenshots (if empty, the screenshot feature will be disabled)
   -redirect
-        print redirection chain for ad links found
+      print redirection chain for ad links found
   -ua string
-        User-Agent string to be used to click on ads
+      User-Agent string to be used to click on ads
+  -urlscan
+      submit url to urlscan.io for analysis
+  -html string
+      path to store search engine result html page
+  -noredirection
+      do not follow redirection, if URLScan submit link to resolve by URLScan instead
 ```
 
 Example:
 
 ```
 seads -config config.yaml -notify
+```
+
+Example with urlscan with redirection handled chain by URLScan and save html page and screenshot on disk (assuming the folder screenshots and htmls already created):
+
+```
+seads -config config.yaml -urlscan -noredirection -screenshot ./screenshots -html ./htmls
 ```
 
 Docker example:
@@ -102,6 +117,12 @@ slack:
 telegram:
   token: TELEGRAMTOKEN
   chatids: [CHATID#1,CHATID#2]
+
+urlscan:
+  token: "APIKEY"
+  scanurl: "https://urlscan.io/api/v1/scan/"
+  visibility: "unlisted"
+  tags: "seads_ads_tracker"
 
 queries:
   - query: "ipad"
