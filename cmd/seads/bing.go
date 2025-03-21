@@ -1,7 +1,7 @@
 package main
 
 // searchBingAds searches for ads on Bing for a given query
-func searchBingAds(query, userAgent string) ([]AdLinkPair, error) {
+func searchBingAds(query, userAgent string, noRedirectionFlag bool) ([]AdLinkPair, error) {
 
 	// hardcoded user agent string below seems to trigger more ads
 	browser, page, err := initializeBrowser(query, searchEngineURLs["Bing"],
@@ -13,7 +13,7 @@ func searchBingAds(query, userAgent string) ([]AdLinkPair, error) {
 	defer browser.MustClose()
 
 	adLinks, err := extractAdLinks(browser, page, userAgent,
-		`li.b_adTop [role="link"]`, "href", "bing", query)
+		`li.b_adTop [role="link"]`, "href", "bing", query, noRedirectionFlag)
 	if err != nil {
 		return nil, err
 	}

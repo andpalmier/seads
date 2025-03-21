@@ -5,7 +5,7 @@ import (
 )
 
 // searchGoogleAds searches for ads on Google for a given encoded string
-func searchGoogleAds(query, userAgent string) ([]AdLinkPair, error) {
+func searchGoogleAds(query, userAgent string, noRedirectionFlag bool) ([]AdLinkPair, error) {
 	browser, page, err := initializeBrowser(query, searchEngineURLs["Google"], "")
 	if err != nil {
 		return nil, err
@@ -14,7 +14,7 @@ func searchGoogleAds(query, userAgent string) ([]AdLinkPair, error) {
 	handleGooglePageInteraction(page)
 
 	adLinks, err := extractAdLinks(browser, page, userAgent,
-		`a.sVXRqc`, "data-rw", "google", query)
+		`a.sVXRqc`, "data-rw", "google", query, noRedirectionFlag)
 	if err != nil {
 		return nil, err
 	}

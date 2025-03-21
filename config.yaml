@@ -14,6 +14,15 @@ telegram:
   token: TELEGRAMTOKEN
   chatids: [CHATID#1,CHATID#2]
 
+urlscan:
+  token: "APIKEY" # generate from  https://urlscan.io/user/apikey/
+  scanurl: "https://urlscan.io/api/v1/scan/"
+  visibility: "private" # public, unlisted, private
+  tags: "private.mytag" # comma separated list of tags
+
+global-domain-exclusion:
+  exclusion-list: [ebay.com, lazada.sg]
+
 queries:
   - query: "ipad"
     expected-domains: [apple.com, amazon.com]
