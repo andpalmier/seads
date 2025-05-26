@@ -1,21 +1,28 @@
-package main
+package internal
 
 import (
 	"github.com/go-rod/rod"
+	//"time"
 )
 
 // searchYahooAds searches for ads on Yahoo for a given encoded string
-func searchYahooAds(query, userAgent string, noRedirectionFlag bool) ([]AdLinkPair, error) {
-	browser, page, err := initializeBrowser(query, searchEngineURLs["Yahoo"], "")
+func searchYahooAds(query, userAgent, engine string, noRedirectionFlag bool) ([]AdResult, error) {
+	browser, page, err := initializeBrowser(query, searchEngineURLs[engine])
 	if err != nil {
 		return nil, err
 	}
+	page.MustWaitLoad()
 	defer browser.MustClose()
-
 	handleYahooPageInteraction(page)
 
-	adLinks, err := extractAdLinks(browser, page, userAgent,
-		`ol.searchCenterTopAds a[data-matarget="ad"]`, "href", "yahoo", query, noRedirectionFlag)
+	if len(ScreenshotPath) > 0 {
+		takeScreenshot(page, engine, query)
+	}
+	if len(HtmlPath) > 0 {
+		saveHTML(page, engine, query)
+	}
+
+	adLinks, err := extractAds(browser, page, userAgent, yahooSelector, "href", query, engine, noRedirectionFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -25,12 +32,12 @@ func searchYahooAds(query, userAgent string, noRedirectionFlag bool) ([]AdLinkPa
 
 // handleYahooPageInteraction handles interactions with Yahoo search results page (closing cookies button)
 func handleYahooPageInteraction(page *rod.Page) {
-	scrollButtons, err := page.Elements(`button#scroll-down-btn`)
+	scrollButtons, err := page.Elements(yahooScrollBtn)
 	if err == nil {
 		if len(scrollButtons) > 0 {
 			scrollButtons[0].MustClick()
 			wait := page.MustWaitNavigation()
-			page.MustElement(`button[value="reject"`).MustClick()
+			page.MustElement(yahooCookieBtn).MustClick()
 			wait()
 		}
 	}

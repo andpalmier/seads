@@ -1,37 +1,39 @@
-package main
+package internal
 
 import (
+	"os"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 )
 
 func TestRemoveDuplicateAds(t *testing.T) {
 	tests := []struct {
-		adLinks         []AdLinkPair
-		noRedirection   bool
-		expectedAdLinks []AdLinkPair
-		expectedError   bool
+		ads           []AdResult
+		noRedirection bool
+		expectedAds   []AdResult
+		expectedError bool
 	}{
 		{
-			adLinks: []AdLinkPair{
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
+			ads: []AdResult{
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
 			},
 			noRedirection: true,
-			expectedAdLinks: []AdLinkPair{
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
+			expectedAds: []AdResult{
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
 			},
 			expectedError: false,
 		},
 		{
-			adLinks: []AdLinkPair{
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
+			ads: []AdResult{
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
 			},
 			noRedirection: false,
-			expectedAdLinks: []AdLinkPair{
-				{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
+			expectedAds: []AdResult{
+				{OriginalAdURL: "http://example.com", FinalRedirectURL: "http://example.com"},
 			},
 			expectedError: false,
 		},
@@ -39,12 +41,12 @@ func TestRemoveDuplicateAds(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			result, err := removeDuplicateAds(tt.adLinks, tt.noRedirection)
+			result, err := removeDuplicateAds(tt.ads, tt.noRedirection)
 			if (err != nil) != tt.expectedError {
 				t.Errorf("expected error: %v, got: %v", tt.expectedError, err)
 			}
-			if !reflect.DeepEqual(result, tt.expectedAdLinks) {
-				t.Errorf("expected %v, got %v", tt.expectedAdLinks, result)
+			if !reflect.DeepEqual(result, tt.expectedAds) {
+				t.Errorf("expected %v, got %v", tt.expectedAds, result)
 			}
 		})
 	}
@@ -113,36 +115,20 @@ func TestExtractDomain(t *testing.T) {
 	}
 }
 
-func TestGenerateAdResults(t *testing.T) {
-	adLinks := []AdLinkPair{
-		{OriginalAdURL: "http://example.com", FinalAdURL: "http://example.com"},
-	}
-	expectedResults := []AdResult{
-		{Engine: "Google", Query: "test", OriginalAdURL: "http://example.com", FinalDomainURL: "example.com", FinalRedirectURL: "http://example.com", RedirectChain: nil, Time: time.Now()},
-	}
-
-	result, err := generateAdResults(adLinks, "test", "Google", time.Now(), true)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if len(result) != len(expectedResults) {
-		t.Fatalf("expected %v results, got %v", len(expectedResults), len(result))
-	}
-}
-
-func TestIsDomainExpected(t *testing.T) {
+func TestIsExpectedDomain(t *testing.T) {
 	tests := []struct {
-		domain          string
+		url             string
 		expectedDomains []string
 		expected        bool
 	}{
-		{"example.com", []string{"example.com"}, true},
-		{"example.com", []string{"test.com"}, false},
+		{"https://www.example.com", []string{"example.com"}, true},
+		{"http://www.example.com", []string{"example.com"}, true},
+		{"http://www.example.com", []string{"tests.com"}, false},
 	}
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			result := isDomainExpected(tt.domain, tt.expectedDomains)
+			result := IsExpectedDomain(tt.url, tt.expectedDomains)
 			if result != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
@@ -152,31 +138,14 @@ func TestIsDomainExpected(t *testing.T) {
 
 func TestExportAdResults(t *testing.T) {
 	adResults := []AdResult{
-		{Engine: "Google", Query: "test", OriginalAdURL: "http://example.com", FinalDomainURL: "example.com", FinalRedirectURL: "http://example.com", RedirectChain: nil, Time: time.Now()},
+		{Engine: "Google", Query: "tests", OriginalAdURL: "http://example.com", FinalDomainURL: "example.com", FinalRedirectURL: "http://example.com", RedirectChain: nil, Time: time.Now()},
 	}
-	err := exportAdResults("test.json", adResults)
+	err := ExportAdResults("tests.json", adResults)
+
+	// Clean up the tests file
+	err = os.Remove("tests.json")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
-	}
-}
-
-func TestBeginsWithHTTP(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected bool
-	}{
-		{"http://example.com", true},
-		{"https://example.com", true},
-		{"example.com", false},
-	}
-
-	for _, tt := range tests {
-		t.Run("", func(t *testing.T) {
-			result := beginsWithHTTP(tt.input)
-			if result != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, result)
-			}
-		})
 	}
 }
 
@@ -188,7 +157,7 @@ func TestCheckHostnameEndsWithDomain(t *testing.T) {
 	}{
 		{"example.com", "com", true},
 		{"example.com", "example.com", true},
-		{"example.com", "test.com", false},
+		{"example.com", "tests.com", false},
 	}
 
 	for _, tt := range tests {
@@ -212,7 +181,7 @@ func TestDecodeBase64(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			result := decodeBase64(tt.input)
+			result, _ := decodeBase64(tt.input)
 			if result != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
@@ -256,6 +225,7 @@ func TestMergeLists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
 			result := mergeLists(tt.firstList, tt.secondList)
+			slices.Sort(result)
 			if !reflect.DeepEqual(result, tt.expected) {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}

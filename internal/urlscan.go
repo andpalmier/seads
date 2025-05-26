@@ -1,9 +1,8 @@
-package main
+package internal
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -16,7 +15,7 @@ type URLScanSubmitter struct {
 	Token      string `yaml:"token"`
 	ScanURL    string `yaml:"scanurl"`
 	Tags       string `yaml:"tags"`
-	Visibility string `yaml:visibility`
+	Visibility string `yaml:"visibility"`
 }
 
 // URLScanSubmissionResponse represents the response from URLScan
@@ -35,7 +34,7 @@ type Options struct {
 	UserAgent string `json:"useragent"`
 }
 
-// Deduplicate URLs
+// deduplicateURLs removes duplicate URLs from a list of AdResult objects
 func deduplicateURLs(adsToScan []AdResult) []string {
 	var uniqueAdLinks []string
 	seenURLs := make(map[string]struct{})
@@ -45,28 +44,23 @@ func deduplicateURLs(adsToScan []AdResult) []string {
 			seenURLs[ads.OriginalAdURL] = struct{}{}
 		}
 	}
-
 	return uniqueAdLinks
 }
 
-// SubmitURLScan submits the URL to URLScan for scanning
-func (config *Config) submitURLScan(adsToScan []AdResult) {
+// SubmitURLScan submits unique URLs to the URLScan service for scanning
+func (config *Config) SubmitURLScan(adsToScan []AdResult) {
 	uniqueAdLinks := deduplicateURLs(adsToScan)
 
 	token := config.URLScanSubmitter.Token
-	url := config.URLScanSubmitter.ScanURL
 	tags := config.URLScanSubmitter.Tags
 	visibility := config.URLScanSubmitter.Visibility
 
 	tagslist := strings.Split(tags, ",")
-	fmt.Println()
-	fmt.Println("*** URLScan Enable ***")
-	fmt.Printf("Endpoint URL: %v\n", url)
-	fmt.Printf("Visibility: %v\n", visibility)
-	fmt.Printf("Tags: %v\n", tags)
-	fmt.Println()
-
-	fmt.Printf("Total URLs to submit: %d\n", len(uniqueAdLinks))
+	log.Printf("\n*** URLScan Enabled ***\n")
+	log.Printf("Endpoint URL: %v\n", config.URLScanSubmitter.ScanURL)
+	log.Printf("Visibility: %v\n", visibility)
+	log.Printf("Tags: %v\n\n", tags)
+	log.Printf("Total URLs to submit: %d\n", len(uniqueAdLinks))
 
 	for _, urlToScan := range uniqueAdLinks {
 		// Create the data payload as a map
@@ -81,14 +75,16 @@ func (config *Config) submitURLScan(adsToScan []AdResult) {
 		// Convert data to JSON
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			fmt.Println("Error marshaling JSON:", err)
+			log.Printf("Error marshaling JSON: %v\n", err)
 			return
 		}
 
-		// Create a POST request object
-		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-
-		// Set necessary headers
+		// Create a POST request object and set appropriate headers
+		req, err := http.NewRequest("POST", config.URLScanSubmitter.ScanURL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			log.Printf("Error creating request: %v", err)
+			continue
+		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("API-Key", token)
 
@@ -96,39 +92,42 @@ func (config *Config) submitURLScan(adsToScan []AdResult) {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Printf("failed to send request: %v", err)
+			log.Printf("Failed to send request: %v\n", err)
+			continue
 		}
 		defer resp.Body.Close()
 
 		// Check the response status code
 		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("server returned non-200 status: %d", resp.StatusCode)
+			log.Printf("server returned non-200 status: %d\n", resp.StatusCode)
+			continue
 		}
 
 		// Read the response body
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Printf("failed to read response body: %v", err)
-		} else {
-			// Parse the URLScan response
-			var response URLScanSubmissionResponse
-			if err := json.Unmarshal(body, &response); err != nil {
-				log.Printf("failed to parse JSON response: %v", err)
-			}
-			// Print the URLScan response
-			log.Println("*************************")
-			log.Println("Message:", response.Message)
-			log.Println("UUID:", response.UUID)
-			log.Println("Result URL:", response.Result)
-			log.Println("API URL:", response.API)
-			log.Println("Visibility:", response.Visibility)
-			log.Println("User Agent:", response.Options.UserAgent)
-			log.Println("Original URL:", response.URL)
-			log.Println("Country:", response.Country)
-			log.Println("*************************")
+			log.Printf("Failed to read response body: %v", err)
+			continue
 		}
-		log.Println(("Two seconds delay between sending"))
-		time.Sleep(2 * time.Second)
 
+		var response URLScanSubmissionResponse
+		if err := json.Unmarshal(body, &response); err != nil {
+			log.Printf("Failed to parse JSON response: %v", err)
+			continue
+		}
+
+		log.Printf("*************************\n")
+		log.Printf("Message: %s", response.Message)
+		log.Printf("UUID: %s", response.UUID)
+		log.Printf("Result URL: %s", response.Result)
+		log.Printf("API URL: %s", response.API)
+		log.Printf("Visibility: %s", response.Visibility)
+		log.Printf("User Agent: %s", response.Options.UserAgent)
+		log.Printf("Original URL: %s", response.URL)
+		log.Printf("Country: %s", response.Country)
+		log.Printf("\n*************************\n")
+
+		log.Printf("\n5 seconds delay between sending...\n")
+		time.Sleep(5 * time.Second)
 	}
 }

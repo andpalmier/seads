@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"os"
@@ -56,7 +56,7 @@ queries:
 	}
 
 	// Parse the config file
-	config, err := parseConfig(tmpFile.Name())
+	config, err := ParseConfig(tmpFile.Name())
 	if err != nil {
 		t.Fatalf("Failed to parse config: %v", err)
 	}
@@ -84,7 +84,7 @@ queries:
 
 // TestParseConfigFileNotFound tests the parseConfig function with a non-existent file
 func TestParseConfigFileNotFound(t *testing.T) {
-	_, err := parseConfig("non_existent_file.yaml")
+	_, err := ParseConfig("non_existent_file.yaml")
 	if err == nil {
 		t.Fatalf("Expected error, got nil")
 	}

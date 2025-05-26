@@ -1,31 +1,31 @@
 mail:
-  host: MAILHOST
+  host: MAIL-HOST
   port: 587
   username: USERNAME
   password: PASSWORD
-  from: FROMADDRESS
-  recipients: [RECIPIENTADDRESS#1,RECIPIENTADDRESS#2]
+  from: FROM-ADDRESS
+  recipients: [RECIPIENT-ADDRESS#1,RECIPIENT-ADDRESS#2]
 
 slack:
-  token: SLACKTOKEN
+  token: SLACK-TOKEN
   channels: [CHANNEL#1,CHANNEL#2]
 
 telegram:
-  token: TELEGRAMTOKEN
+  token: TELEGRAM-TOKEN
   chatids: [CHATID#1,CHATID#2]
 
 urlscan:
-  token: "APIKEY" # generate from  https://urlscan.io/user/apikey/
+  token: "APIKEY" # generate from https://urlscan.io/user/profile/
   scanurl: "https://urlscan.io/api/v1/scan/"
   visibility: "private" # public, unlisted, private
   tags: "private.mytag" # comma separated list of tags
 
 global-domain-exclusion:
-  exclusion-list: [ebay.com, lazada.sg]
+  exclusion-list: [ebay.com, amazon.com, fust.ch]
 
 queries:
   - query: "ipad"
-    expected-domains: [apple.com, amazon.com]
+    expected-domains: [apple.com, amazon.de]
 
   - query: "as roma"
     expected-domains: []

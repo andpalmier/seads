@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"os"
@@ -27,7 +27,7 @@ type Config struct {
 }
 
 // parseConfig parses the specified config file
-func parseConfig(configPath string) (Config, error) {
+func ParseConfig(configPath string) (Config, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return Config{}, err

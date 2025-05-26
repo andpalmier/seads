@@ -1,4 +1,4 @@
-project_name: seads
+project_name: utils
 before:
   hooks:
     - go mod tidy
@@ -13,7 +13,7 @@ builds:
       - amd64
       - arm64
     mod_timestamp: "{{ .CommitTimestamp }}"
-    main: ./cmd/seads/
+    main: utils.go
 
 archives:
   - format: tar.gz
@@ -36,4 +36,4 @@ changelog:
   filters:
     exclude:
       - '^docs:'
-      - '^test:'
+      - '^tests:'
