@@ -17,7 +17,7 @@ func init() {
 	flag.StringVar(&UserAgentString, "ua", UserAgentString, "User-Agent string to be used to click on ads")
 	flag.StringVar(&OutputFilePath, "out", OutputFilePath, "path of JSON file containing links of gathered ads")
 	flag.BoolVar(&EnableURLScan, "urlscan", EnableURLScan, "submit url to urlscan.io for analysis")
-	flag.BoolVar(&NoRedirection, "noredirect", NoRedirection, "do not follow redirection; if \"urlscan\" is enabled, submit link to resolve by URLScan instead")
+	flag.BoolVar(&NoRedirection, "noredirect", NoRedirection, "do not follow redirection; if \"urlscan\" is enabled, submit advertisement link to resolve by URLScan instead")
 	flag.StringVar(&HtmlPath, "html", HtmlPath, "path to store search engine result html page (if empty, the htmlPath feature will be disabled)")
 	flag.BoolVar(&Logger, "log", Logger, "enable detailed logging, VERY VERBOSE!")
 	log.SetFlags(0)

@@ -100,13 +100,13 @@ docker run -v "$(pwd)":/mnt seads -config /mnt/config.yaml -out /mnt/results.jso
 Running with redirection chain handled by URLScan, and save HTML page and screenshot:
 
 ```bash
-seads -config config.yaml -urlscan -noredirection -screenshot ./screenshots -html ./htmls
+seads -config config.yaml -urlscan -noredirect -screenshot ./screenshots -html ./htmls
 ```
 
 Same as above, but in Docker:
 
 ```bash
-docker run -v "$(pwd)":/mnt seads -config /mnt/config.yaml -urlscan -noredirection -screenshot /mnt/screenshots -html /mnt/htmls
+docker run -v "$(pwd)":/mnt seads -config /mnt/config.yaml -urlscan -noredirect -screenshot /mnt/screenshots -html /mnt/htmls
 ```
 
 You can leverage the notification feature by automating the execution of `seads` using a cron job or a task scheduler.

@@ -41,9 +41,9 @@ func TestRemoveDuplicateAds(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			result, err := removeDuplicateAds(tt.ads, tt.noRedirection)
+			result, err := removeDuplicateAds(tt.ads)
 			if (err != nil) != tt.expectedError {
-				t.Errorf("expected error: %v, got: %v", tt.expectedError, err)
+				t.Errorf("expected error: %v, got: %v", tt.expectedError, tt.noRedirection)
 			}
 			if !reflect.DeepEqual(result, tt.expectedAds) {
 				t.Errorf("expected %v, got %v", tt.expectedAds, result)
