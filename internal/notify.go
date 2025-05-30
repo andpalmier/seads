@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -72,8 +72,8 @@ func (mn *MailNotifier) SendNotificationMessage(message string) error {
 	return shoutrrr.Send(url, message)
 }
 
-// sendNotifications creates the message to be sent and sends it using the specified notification services
-func (config *Config) sendNotifications(adsToNotify []AdResult) {
+// SendNotifications creates the message to be sent and sends it using the specified notification services
+func (config *Config) SendNotifications(adsToNotify []AdResult) {
 	message := createNotificationMessage(adsToNotify)
 
 	notifiers := []Notifier{}
@@ -104,18 +104,24 @@ func (config *Config) sendNotifications(adsToNotify []AdResult) {
 
 // createNotificationMessage assembles the message to be sent over the specified notification channel
 func createNotificationMessage(toSend []AdResult) string {
-	message := "Here are the \"unexpected domains\" found during the last execution of seads:\n\n" +
+	message := "Here are the \"unexpected domains\" found during the last execution of utils:\n\n" +
 		"Message creation date: " + time.Now().Format(time.DateTime) + "\n\n"
 	for _, resultAd := range toSend {
 		formattedMessage := formatNotificationMessage(resultAd)
 		message += formattedMessage + "\n"
 	}
-	message += "\nThis message was automatically sent by seads (github.com/andpalmier/seads)"
+	message += "\nThis message was automatically sent by utils (github.com/andpalmier/utils)"
 	return message
 }
 
 // formatNotificationMessage formats the notification message to be sent
 func formatNotificationMessage(resultAd AdResult) string {
+
+	if resultAd.Advertiser != "" {
+		return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n \tAdvertiser: %s\n\tLocation: %s\n",
+			resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL), resultAd.Advertiser, resultAd.Location)
+	}
+
 	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n",
-		resultAd.Engine, resultAd.Query, defangAdURL(resultAd.FinalDomainURL), defangAdURL(resultAd.FinalRedirectURL))
+		resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL))
 }

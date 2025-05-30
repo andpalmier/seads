@@ -1,31 +1,34 @@
-package main
+package internal
 
 import (
 	"context"
 	"fmt"
 	"github.com/carlmjohnson/requests"
+	"log"
 	"net/http"
 	"strings"
 )
 
-// printRedirectionChain prints the redirection chain of URLs
-func printRedirectionChain(redirectionURLs []string) {
-	fmt.Printf("  redirect chain: ")
+// printRedirectionChain prints the chain of redirection URLs or returns an error if none are found
+func printRedirectionChain(redirectionURLs []string) error {
+	log.Printf("  redirect chain: ")
 	if len(redirectionURLs) > 1 {
 		fmt.Println()
 		for i, url := range redirectionURLs {
-			if !*printCleanLinks {
-				url = defangAdURL(url)
+			if !PrintCleanLinks {
+				url = defangURL(url)
 			}
-			fmt.Printf("    %d) %s\n", i+1, url)
+			log.Printf("    %d) %s\n", i+1, url)
 		}
 	} else {
-		fmt.Println("no redirects found!")
+		log.Printf("no redirects found!\n")
+		return fmt.Errorf("no redirects found in the chain")
 	}
 	fmt.Println()
+	return nil
 }
 
-// createNoRedirectHTTPClient creates an HTTP client that does not follow redirects
+// createNoRedirectHTTPClient creates an HTTP client that prevents automatic redirects
 func createNoRedirectHTTPClient(userAgent string) *http.Client {
 	client := *http.DefaultClient
 	client.CheckRedirect = requests.NoFollow
@@ -55,7 +58,7 @@ func (uat *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return uat.transport.RoundTrip(req)
 }
 
-// findRedirectionChain finds the redirection chain starting from the given URL
+// findRedirectionChain retrieves the redirection chain starting from the given URL
 func findRedirectionChain(initialURL string, userAgent string) ([]string, error) {
 	client := createNoRedirectHTTPClient(userAgent)
 	var redirectionChain []string
@@ -78,7 +81,7 @@ func findRedirectionChain(initialURL string, userAgent string) ([]string, error)
 	return redirectionChain, nil
 }
 
-// fetchRedirectURL fetches the URL and returns the redirect location if found
+// fetchRedirectURL fetches the redirect location for a given URL using an HTTP client
 func fetchRedirectURL(client *http.Client, url string) (string, error) {
 	var redirectLocation string
 	err := requests.URL(url).
@@ -92,7 +95,7 @@ func fetchRedirectURL(client *http.Client, url string) (string, error) {
 	return redirectLocation, err
 }
 
-// isValidRedirect checks if the redirected URL is valid and different from the initial URL
+// isValidRedirect checks if a redirect URL is valid and different from the initial URL
 func isValidRedirect(redirectURL, initialURL string) bool {
 	return strings.HasPrefix(redirectURL, "http") && !strings.HasPrefix(redirectURL, initialURL)
 }

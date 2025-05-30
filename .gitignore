@@ -1,2 +1,5 @@
-seads
-test/*
+tests/*
+.DS_Store
+.idea
+.config.yaml
+.gitignore
