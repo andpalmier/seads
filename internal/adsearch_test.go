@@ -19,7 +19,7 @@ func TestProcessAdResults(t *testing.T) {
 	var submitToURLScan []AdResult
 
 	// Enable necessary flags
-	EnableURLScan = false
+	EnableURLScan = true
 	EnableNotifications = true
 	PrintRedirectChain = false
 
@@ -34,7 +34,9 @@ func TestProcessAdResults(t *testing.T) {
 	expectedNotifications := []AdResult{
 		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com"},
 	}
-	expectedSubmitToURLScan := adResults
+	expectedSubmitToURLScan := []AdResult{
+		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com"},
+	}
 
 	// Assertions
 	if !reflect.DeepEqual(allAdResults, expectedAllAdResults) {
