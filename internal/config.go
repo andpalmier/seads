@@ -21,6 +21,7 @@ type Config struct {
 	TelegramNotifier      *TelegramNotifier      `yaml:"telegram"`
 	SlackNotifier         *SlackNotifier         `yaml:"slack"`
 	MailNotifier          *MailNotifier          `yaml:"mail"`
+	DiscordNotifier       *DiscordNotifier       `yaml:"discord"`
 	URLScanSubmitter      *URLScanSubmitter      `yaml:"urlscan"`
 	GlobalDomainExclusion *GlobalDomainExclusion `yaml:"global-domain-exclusion"`
 	Queries               []SearchQuery          `yaml:"queries"`

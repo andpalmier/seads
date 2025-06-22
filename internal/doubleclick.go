@@ -18,9 +18,14 @@ func ResolveDoubleClickAdURL(doubleClickURL string) (string, error) {
 	queryParams := parsedURL.Query()
 	destURL := queryParams.Get("ds_dest_url")
 
+	// Special case for d.agkn.com
+	if destURL == "https://d.agkn.com/pixel/4102/?che=" {
+		destURL = queryParams.Get("l0")
+	}
+
 	test, err := url.Parse(destURL)
 	if err != nil || test.Host == "" {
-		return "", fmt.Errorf("Skipping invalid Bing URL: %s, Error: %v\n", destURL, err)
+		return "", fmt.Errorf("Skipping invalid DoubleClick URL: %s, Error: %v\n", destURL, err)
 	}
 
 	return destURL, nil

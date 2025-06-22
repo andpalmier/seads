@@ -39,14 +39,16 @@ func saveHTML(page *rod.Page, outputFilePrefix string, query string) {
 	if Logger {
 		log.Printf("Save search engine result is on\n")
 	}
-	fileHtmlPath := fmt.Sprintf("search-page--%s-%s-%d.html", outputFilePrefix, query, time.Now().UnixNano())
+	fileHtmlPath := fmt.Sprintf("%s-%s-%d.html", outputFilePrefix, query, time.Now().UnixNano())
 
 	// Write the HTML content to a file
 	err = os.WriteFile(filepath.Join(HtmlPath, fileHtmlPath), []byte(htmlContent), 0644)
 	if err != nil {
 		log.Fatalf("failed to save HTML to file: %v\n", err)
 	} else {
-		log.Printf("\nVisited page saved to %s\n\n", fileHtmlPath)
+		if Logger {
+			log.Printf("Visited page saved to %s", fileHtmlPath)
+		}
 	}
 }
 
@@ -60,7 +62,9 @@ func takeScreenshot(page *rod.Page, outputFilePrefix string, query string) {
 		log.Printf("Taking screenshot... ")
 	}
 	page.MustScreenshotFullPage(filepath.Join(ScreenshotPath, filename))
-	log.Printf("screenshot saved at %s\n", filename)
+	if Logger {
+		log.Printf("Screenshot saved at %s", filename)
+	}
 }
 
 // getAdInfo retrieves the advertiser name and location, works only in google, syndicated and adsenseads
@@ -209,6 +213,11 @@ func ResolveAdUrl(adURL string, currentAd *AdResult) {
 		redirectURL, finalDomain = resolveAdURLByDomain(redirectURL)
 	}
 
+	// Handle d.adx.io nested redirects
+	if finalDomain == dadxio {
+		redirectURL, finalDomain = resolveAdURLByDomain(redirectURL)
+	}
+
 	// Update the AdResult with final values
 	currentAd.FinalRedirectURL = redirectURL
 	currentAd.FinalDomainURL = finalDomain
@@ -232,6 +241,8 @@ func resolveAdURLByDomain(adURL string) (string, string) {
 		bingdomain:        ResolveBingAdURL,
 		ddgdomain:         ResolveDuckDuckGoAdURL,
 		doubleclickdomain: ResolveDoubleClickAdURL,
+		googleadsservices: ResolveGoogleAdURL,
+		dadxio:            ResolveDadxioAdURL,
 	}
 
 	if resolver, exists := resolvers[adDomain]; exists {
@@ -278,6 +289,12 @@ func runConcurrentSearch(
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			// Fix Recover from panics
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("\n\n******\nPanic in runConcurrentSearch for %s\n*******\n\n", engineName)
+				}
+			}()
 			ads, err := engineFunc(query, userAgent, engineName, noRedirection)
 			if err != nil {
 				errors <- err
@@ -310,7 +327,7 @@ func runConcurrentSearch(
 	return allAds, nil
 }
 
-// processSearchResults handles post-search processing of ads
+// processSearchResults handles post-search processing of ads and returns unique Ads
 func processSearchResults(ads []AdResult, userAgent string, noRedirection bool) ([]AdResult, error) {
 	// Remove duplicates
 	uniqueAds, err := removeDuplicateAds(ads)

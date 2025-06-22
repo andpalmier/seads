@@ -14,6 +14,9 @@ telegram:
   token: TELEGRAM-TOKEN
   chatids: [CHATID#1,CHATID#2]
 
+discord:
+  webhook_url: DISCORD_WEBHOOK
+
 urlscan:
   token: "APIKEY" # generate from https://urlscan.io/user/profile/
   scanurl: "https://urlscan.io/api/v1/scan/"

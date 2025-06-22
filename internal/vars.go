@@ -56,6 +56,8 @@ var (
 	syndicateddomain  = "syndicatedsearch.goog"
 	adsenseadsdomain  = "adsensecustomsearchads.com"
 	doubleclickdomain = "ad.doubleclick.net"
+	googleadsservices = "googleadservices.com"
+	dadxio            = "d.adx.io"
 
 	searchEngineURLs = map[string]string{
 		"google":     googleurl,

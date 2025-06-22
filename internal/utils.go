@@ -48,7 +48,9 @@ func normalizeURL(adURL string) string {
 
 // defangURL modifies a URL to make it non-clickable by replacing "." with "[.]"
 func defangURL(url string) string {
-	return strings.ReplaceAll(url, ".", "[.]")
+	replace := strings.ReplaceAll(url, ".", "[.]")
+	replace = strings.Replace(replace, "http", "hxxp", 1)
+	return replace
 }
 
 // extractDomain extracts the domain name from a given URL or returns an error if invalid
