@@ -16,7 +16,7 @@ Cybercriminals are increasingly using search engines ads to drive traffic to phi
 ### Features ⚡️
 
 - **Multiple search engines support**: Currently supports Google*, Bing, DuckDuckGo, Yahoo, Aol, Syndicated* and AdSense*.
-- **Automated reporting**: Send reports of findings via email, Slack, or Telegram.
+- **Automated reporting**: Send reports of findings via email, Slack, Discord or Telegram.
 - **Concurrent search**: Specify multiple headless instances to gather as many ads as possible concurrently.
 - **Screenshots**: Capture screenshots of ads found in search engines for evidence.
 - **Docker support**: Run `seads` using Docker.
