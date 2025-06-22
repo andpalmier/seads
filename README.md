@@ -37,7 +37,8 @@ Cybercriminals are increasingly using search engines ads to drive traffic to phi
 
 ## Getting started 🛠️
 
-⚠️`seads` will click on dangerous links, and potentially expose your IP address to malicious sites. Consider using a VPN/proxy or run `seads` in a VPS to avoid this risk.
+> [!CAUTION]  
+> `seads` will click on dangerous links, and potentially expose your IP address to malicious sites. Consider using a VPN/proxy or running `seads` in a VPS to avoid this risk.
 
 ### Install
 
