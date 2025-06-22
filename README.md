@@ -15,7 +15,7 @@ Cybercriminals are increasingly using search engines ads to drive traffic to phi
 
 ### Features ⚡️
 
-- **Multiple search engines support**: Currently supports Google*, Bing, DuckDuckGo, Yahoo, Aol, Syndicated* and AdSense*.
+- **Multiple search engines support**: Currently supports Google, Bing, DuckDuckGo, Yahoo, Aol, Syndicated and AdSense (see note below).
 - **Automated reporting**: Send reports of findings via email, Slack, Discord or Telegram.
 - **Concurrent search**: Specify multiple headless instances to gather as many ads as possible concurrently.
 - **Screenshots**: Capture screenshots of ads found in search engines for evidence.
@@ -29,11 +29,13 @@ Cybercriminals are increasingly using search engines ads to drive traffic to phi
 - **HTML page saving**: Save the HTML page of the search engine result for later analysis.
 - **Expected domains**: Specify expected domains to filter out known advertisers from notifications.
 
-\* **NB**: Currently, Google Search detection doesn't always work, and the automated browser is often prompted by a CAPTCHA. As a workaround, Syndicated and AdSense are used to gather ads from Google ([see here](https://support.google.com/adsense/answer/14201307)). This may not be 100% accurate, but it is the best available option as of now.
+> [!NOTE]  
+> Currently, the Google search detection doesn't always work because the automated browser is often prompted by a CAPTCHA. As a workaround, Syndicated and AdSense are used to gather ads from Google ([see here](https://support.google.com/adsense/answer/14201307)). This may not be 100% accurate, but it is the best available option as of now.
+
 
 ### Known limitations 😕
 - Due to the nature of search engine ads, a single search may not reveal all ads. Using concurrent headless browsers might slow down detection but ensures comprehensive ad gathering.
-- Notifications on Slack and Telegram have character limits. Messages exceeding the limit won't be sent.
+- Notifications on Slack, Telegram and Discord have character limits. Messages exceeding the limit won't be sent.
 
 ## Getting started 🛠️
 
