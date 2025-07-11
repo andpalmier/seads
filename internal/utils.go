@@ -46,6 +46,25 @@ func normalizeURL(adURL string) string {
 	return "https://" + adURL
 }
 
+// processSearchResults handles post-search processing of ads and returns unique Ads
+func processSearchResults(ads []AdResult, userAgent string, noRedirection bool) ([]AdResult, error) {
+	// Remove duplicates
+	uniqueAds, err := removeDuplicateAds(ads)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove duplicates: %v", err)
+	}
+
+	// Follow redirects if enabled
+	if !noRedirection {
+		for i := range uniqueAds {
+			redirectChain, _ := findRedirectionChain(uniqueAds[i].OriginalAdURL, userAgent)
+			uniqueAds[i].RedirectChain = redirectChain
+		}
+	}
+
+	return uniqueAds, nil
+}
+
 // defangURL modifies a URL to make it non-clickable by replacing "." with "[.]"
 func defangURL(url string) string {
 	replace := strings.ReplaceAll(url, ".", "[.]")
@@ -128,49 +147,87 @@ func mergeLists(firstList, secondList []string) []string {
 	return result
 }
 
-// printDomainInfo logs domain information based on whether it is expected or unexpected
-func printDomainInfo(resultAd AdResult, expected bool) {
-	if expected {
-		green.Printf("  [+] expected domain: ")
-	} else {
-		red.Printf("  [!] unexpected domain: ")
-	}
+// processAdResults processes the ad results and updates the respective lists
+func processAdResults(adResults []AdResult, expectedDomainList []string, allAdResults *[]AdResult, notifications *[]AdResult, config Config) error {
+	// Iterate over each ad result
+	for i := range adResults {
+		adResult := adResults[i]
 
-	domainToPrint := resultAd.FinalDomainURL
-	urlToPrint := resultAd.FinalRedirectURL
-	originalURL := resultAd.OriginalAdURL
+		if !IsExpectedDomain(adResult.FinalDomainURL, expectedDomainList) {
+			if Logger {
+				safePrintf(nil, "\nURL's domain not on expectedDomain: %s not in '%s'\n", adResult.FinalDomainURL, expectedDomainList)
+			}
+			printDomainInfo(adResult, false)
+			adResult.ExpectedDomains = false
 
-	if PrintCleanLinks {
-		urlToPrint = defangURL(urlToPrint)
-		domainToPrint = defangURL(domainToPrint)
-		originalURL = defangURL(originalURL)
-	}
+			// Submit original advertisement URL to URLScan if enabled
+			if EnableURLScan {
+				urlScanResult, err := SubmitURLScan(config, adResult.OriginalAdURL)
+				if err != nil {
+					log.Printf("Error submitting to URLScan: %v\n", err)
+				} else {
+					adResult.URLScan = urlScanResult
+				}
+			}
 
-	log.Printf("%s => %s", domainToPrint, urlToPrint)
-	origDom, _ := extractDomain(originalURL)
-	if domainToPrint != origDom {
-		log.Printf("  original URL: %s\n", originalURL)
-	}
+			// Append the ad result to the notifications list if notifications are enabled
+			if EnableNotifications {
+				*notifications = append(*notifications, adResult)
+			}
 
-	if resultAd.Advertiser != "" {
-		log.Printf("  advertiser name: %s\n  advertiser location: %s\n", resultAd.Advertiser, resultAd.Location)
+			// Print the redirection chain if enabled
+			if PrintRedirectChain {
+				if err := printRedirectionChain(adResult.RedirectChain); err != nil {
+					return fmt.Errorf("failed to print redirection chain: %w", err)
+				}
+			}
+		} else {
+			// add is in the expected domain list
+			printDomainInfo(adResult, true)
+			adResult.ExpectedDomains = true
+		}
+		// Append the ad result to the allAdResults list
+		*allAdResults = append(*allAdResults, adResult)
 	}
-	fmt.Println()
+	return nil
 }
 
-// PrintFlags prints the current values of the command-line arguments
-func PrintFlags() {
-	log.Println("Configuration Flags:")
-	log.Printf("  ConfigFilePath: %s\n", ConfigFilePath)
-	log.Printf("  ConcurrencyLevel: %d\n", ConcurrencyLevel)
-	log.Printf("  ScreenshotPath: %s\n", ScreenshotPath)
-	log.Printf("  PrintCleanLinks: %t\n", PrintCleanLinks)
-	log.Printf("  EnableNotifications: %t\n", EnableNotifications)
-	log.Printf("  PrintRedirectChain: %t\n", PrintRedirectChain)
-	log.Printf("  UserAgentString: %s\n", UserAgentString)
-	log.Printf("  EnableURLScan: %t\n", EnableURLScan)
-	log.Printf("  OutputFilePath: %s\n", OutputFilePath)
-	log.Printf("  NoRedirection: %t\n", NoRedirection)
-	log.Printf("  HtmlPath: %s\n", HtmlPath)
-	log.Printf("  Logger: %t\n\n", Logger)
+/* OLD
+// processAdResults processes the ad results and updates the respective lists
+func processAdResults(adResults []AdResult, expectedDomainList []string, allAdResults *[]AdResult, notifications *[]AdResult, submitToURLScan *[]AdResult) error {
+	// Iterate over each ad result
+	for _, adResult := range adResults {
+		// Append the ad result to the allAdResults list
+		*allAdResults = append(*allAdResults, adResult)
+
+		if !IsExpectedDomain(adResult.FinalDomainURL, expectedDomainList) {
+			if Logger {
+				safePrintf(nil, "\nURL's domain not on expectedDomain: %s not in '%s'\n", adResult.FinalDomainURL, expectedDomainList)
+			}
+			printDomainInfo(adResult, false)
+
+			// Append the ad result to submitToURLScan list if enabled
+			if EnableURLScan {
+				*submitToURLScan = append(*submitToURLScan, adResult)
+			}
+
+			// Append the ad result to the notifications list if notifications are enabled
+			if EnableNotifications {
+				*notifications = append(*notifications, adResult)
+			}
+
+			// Print the redirection chain if enabled
+			if PrintRedirectChain {
+				if err := printRedirectionChain(adResult.RedirectChain); err != nil {
+					return fmt.Errorf("failed to print redirection chain: %w", err)
+				}
+			}
+		} else {
+			// add is in the expected domain list
+			printDomainInfo(adResult, true)
+		}
+
+	}
+	return nil
 }
+*/

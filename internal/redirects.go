@@ -6,6 +6,7 @@ import (
 	"github.com/carlmjohnson/requests"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -99,3 +100,124 @@ func fetchRedirectURL(client *http.Client, url string) (string, error) {
 func isValidRedirect(redirectURL, initialURL string) bool {
 	return strings.HasPrefix(redirectURL, "http") && !strings.HasPrefix(redirectURL, initialURL)
 }
+
+// extractDestURL extracts a destination URL from a given query parameter key
+func extractDestURL(rawURL, paramKey string) (string, error) {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil || parsedURL.Host == "" {
+		return "", fmt.Errorf("Skipping invalid URL: %s, Error: %v", rawURL, err)
+	}
+	queryParams := parsedURL.Query()
+	destURL := queryParams.Get(paramKey)
+	test, err := url.Parse(destURL)
+	if err != nil || test.Host == "" {
+		return "", fmt.Errorf("Skipping invalid destination URL: %s, Error: %v", destURL, err)
+	}
+	return destURL, nil
+}
+
+// resolveAdURLByDomainRecursive recursively resolves ad URLs by following known resolver chains.
+func resolveAdURLByDomainRecursive(adURL string, visited map[string]struct{}) (string, string) {
+	if visited == nil {
+		visited = make(map[string]struct{})
+	}
+	if _, seen := visited[adURL]; seen {
+		// Prevent infinite loops
+		return adURL, ""
+	}
+	visited[adURL] = struct{}{}
+
+	adDomain, err := extractDomain(adURL)
+	if err != nil {
+		if Logger {
+			safePrintf(nil, "Error extracting domain from URL: %s", adURL)
+		}
+		return adURL, ""
+	}
+
+	resolvers := map[string]func(string) (string, error){
+		googledomain:      ResolveGoogleAdURL,
+		adsenseadsdomain:  ResolveGoogleAdURL,
+		syndicateddomain:  ResolveGoogleAdURL,
+		bingdomain:        ResolveBingAdURL,
+		ddgdomain:         ResolveDuckDuckGoAdURL,
+		doubleclickdomain: ResolveDoubleClickAdURL,
+		googleadsservices: ResolveGoogleAdURL,
+		dadxio:            ResolveDadxioAdURL,
+		dartsearch:        ResolveDartSearchAdURL,
+		clickcease:        ResolveClickCeaseAdURL,
+		agkn:              ResolveAgknAdURL,
+	}
+
+	if resolver, exists := resolvers[adDomain]; exists {
+		if resolvedURL, err := resolver(adURL); err == nil && resolvedURL != adURL {
+			return resolveAdURLByDomainRecursive(resolvedURL, visited)
+		}
+	}
+
+	return adURL, adDomain
+}
+
+// ResolveAdUrl resolves the ad URL to its final destination and updates the AdResult.
+func ResolveAdUrl(adURL string, currentAd *AdResult) {
+	if currentAd.FinalRedirectURL != "" {
+		return
+	}
+	redirectURL, finalDomain := resolveAdURLByDomainRecursive(adURL, nil)
+	currentAd.FinalRedirectURL = redirectURL
+	currentAd.FinalDomainURL = finalDomain
+}
+
+// ResolveDartSearchAdURL uses the generic extractor
+func ResolveDartSearchAdURL(dartSearchAdURL string) (string, error) {
+	return extractDestURL(dartSearchAdURL, "ds_dest_url")
+}
+
+// ResolveDadxioAdURL uses the generic extractor
+func ResolveDadxioAdURL(dadxioAdURL string) (string, error) {
+	return extractDestURL(dadxioAdURL, "xu")
+}
+
+// ResolveClickCeaseAdURL uses the generic extractor
+func ResolveClickCeaseAdURL(ClickCeaseAdURL string) (string, error) {
+	return extractDestURL(ClickCeaseAdURL, "url")
+}
+
+// ResolveDoubleClickAdURL uses the generic extractor
+func ResolveDoubleClickAdURL(doubleClickURL string) (string, error) {
+	return extractDestURL(doubleClickURL, "ds_dest_url")
+}
+
+// ResolveDoubleClickAdURL uses the generic extractor
+func ResolveAgknAdURL(AgknAdURL string) (string, error) {
+	return extractDestURL(AgknAdURL, "l0")
+}
+
+/*
+// ResolveDoubleClickAdURL parses a Doubleclick URL and extracts the final redirect URL
+func ResolveDoubleClickAdURL(doubleClickURL string) (string, error) {
+
+	// Parse the unescaped URL
+	parsedURL, err := url.Parse(doubleClickURL)
+	if err != nil || parsedURL.Host == "" {
+		return "", fmt.Errorf("Skipping invalid DoubleClick URL: %s, Error: %v\n", doubleClickURL, err)
+	}
+
+	// Extract query parameters from the parsed URL
+	queryParams := parsedURL.Query()
+	destURL := queryParams.Get("ds_dest_url")
+
+	// Special case for d.agkn.com
+	if destURL == "https://d.agkn.com/pixel/4102/?che=" {
+		destURL = queryParams.Get("l0")
+	}
+
+	test, err := url.Parse(destURL)
+	if err != nil || test.Host == "" {
+		return "", fmt.Errorf("Skipping invalid DoubleClick URL: %s, Error: %v\n", destURL, err)
+	}
+
+	return destURL, nil
+}
+
+*/

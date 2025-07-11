@@ -77,8 +77,8 @@ func TestDefangURL(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"http://example.com", "http://example[.]com"},
-		{"https://example.com", "https://example[.]com"},
+		{"http://example.com", "hxxp://example[.]com"},
+		{"https://example.com", "hxxps://example[.]com"},
 	}
 
 	for _, tt := range tests {

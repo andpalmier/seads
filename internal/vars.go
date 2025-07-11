@@ -23,6 +23,10 @@ type AdResult struct {
 	Time             time.Time `json:"time"`
 	Advertiser       string    `json:"advertiser"`
 	Location         string    `json:"location"`
+
+	// REMOVE BOTH
+	ExpectedDomains bool                      `json:"expected-domains"`
+	URLScan         URLScanSubmissionResponse `json:"urlscan"`
 }
 
 var (
@@ -39,6 +43,8 @@ var (
 	NoRedirection       = false
 	HtmlPath            = ""
 	Logger              = false
+	// TO BE REMOVED?!
+	DirectQuery = ""
 
 	// search engine URLs
 	googleurl     = "https://www.google.com/search?q="
@@ -58,6 +64,9 @@ var (
 	doubleclickdomain = "ad.doubleclick.net"
 	googleadsservices = "googleadservices.com"
 	dadxio            = "d.adx.io"
+	dartsearch        = "clickserve.dartsearch.net"
+	clickcease        = "monitor.clickcease.com"
+	agkn              = "d.agkn.com"
 
 	searchEngineURLs = map[string]string{
 		"google":     googleurl,
@@ -70,7 +79,9 @@ var (
 	}
 
 	// some search engines prefer specific User-Agent strings
-	ChromeMacUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+	ChromeWinUA   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+	ChromeMacOsUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+	userAgents    = []string{ChromeWinUA, ChromeMacOsUA}
 
 	// ad link selectors
 	googleSelector     = "a.sVXRqc"
@@ -88,6 +99,7 @@ var (
 	yahooScrollBtn  = `button#scroll-down-btn`
 	aolCookieBtn    = `button[value="reject"]`
 	aolScrollBtn    = `button#scroll-down-btn`
+	adInfoText      = `//div[div[text()="Location"]]/div[2]/text() | //div[div[text()="Location"]]/preceding-sibling::div[1]/div[2]/text()`
 
 	// search engine functions
 	searchEnginesFunctions = []SearchEngineFunction{
@@ -109,7 +121,7 @@ var (
 	Laptop = devices.Device{
 		Title:          "laptop",
 		Capabilities:   []string{},
-		UserAgent:      ChromeMacUA,
+		UserAgent:      ChromeWinUA,
 		AcceptLanguage: "en",
 		Screen: devices.Screen{
 			DevicePixelRatio: 1,

@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // URLScanSubmitter holds configurations for sending URL with unexpected domain to URLScan
@@ -34,6 +33,7 @@ type Options struct {
 	UserAgent string `json:"useragent"`
 }
 
+/* UNCOMMENT
 // deduplicateURLs removes duplicate URLs from a list of AdResult objects
 func deduplicateURLs(adsToScan []AdResult) []string {
 	var uniqueAdLinks []string
@@ -46,6 +46,88 @@ func deduplicateURLs(adsToScan []AdResult) []string {
 	}
 	return uniqueAdLinks
 }
+
+*/
+
+// SubmitURLScan submit single URL to the URLScan service for scanning
+func SubmitURLScan(config Config, urlToScan string) (URLScanSubmissionResponse, error) {
+
+	token := config.URLScanSubmitter.Token
+	tags := config.URLScanSubmitter.Tags
+	visibility := config.URLScanSubmitter.Visibility
+
+	taglist := strings.Split(tags, ",")
+	log.Printf("\n*** URLScan Enabled ***\n")
+	log.Printf("Endpoint URL: %v\n", config.URLScanSubmitter.ScanURL)
+	log.Printf("Visibility: %v\n", visibility)
+	log.Printf("Tags: %v\n\n", tags)
+	// UNCOMMENT
+	//log.Printf("Total URLs to submit: %d\n", len(uniqueAdLinks))
+
+	log.Printf("URL for submission: %s", urlToScan)
+	data := map[string]interface{}{
+		"url":        urlToScan,
+		"visibility": visibility,
+		"tags":       taglist,
+	}
+
+	// Convert data to JSON
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Error marshaling JSON: %v\n", err)
+		return URLScanSubmissionResponse{}, err
+	}
+
+	// Create a POST request object and set appropriate headers
+	req, err := http.NewRequest("POST", config.URLScanSubmitter.ScanURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Printf("Error creating request: %v", err)
+		return URLScanSubmissionResponse{}, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("API-Key", token)
+
+	// Send the POST request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Failed to send request: %v\n", err)
+		return URLScanSubmissionResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("server returned non-200 status: %d\n", resp.StatusCode)
+		return URLScanSubmissionResponse{}, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Failed to read response body: %v", err)
+		return URLScanSubmissionResponse{}, err
+	}
+
+	var response URLScanSubmissionResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		log.Printf("Failed to parse JSON response: %v", err)
+		return URLScanSubmissionResponse{}, err
+	}
+
+	log.Printf("*************************\n")
+	log.Printf("Message: %s", response.Message)
+	log.Printf("UUID: %s", response.UUID)
+	log.Printf("Result URL: %s", response.Result)
+	log.Printf("API URL: %s", response.API)
+	log.Printf("Visibility: %s", response.Visibility)
+	log.Printf("User Agent: %s", response.Options.UserAgent)
+	log.Printf("Original URL: %s", response.URL)
+	log.Printf("Country: %s", response.Country)
+	log.Printf("\n*************************\n")
+
+	return response, err
+}
+
+/* OLD
 
 // SubmitURLScan submits unique URLs to the URLScan service for scanning
 func (config *Config) SubmitURLScan(adsToScan []AdResult) {
@@ -131,3 +213,5 @@ func (config *Config) SubmitURLScan(adsToScan []AdResult) {
 		time.Sleep(5 * time.Second)
 	}
 }
+
+*/

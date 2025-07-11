@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/go-rod/rod"
-	"net/url"
+	//"net/url"
 )
 
 // searchGoogleAds searches for ads on Google for a given encoded string
@@ -42,6 +42,12 @@ func handleGooglePageInteraction(page *rod.Page) {
 	}
 }
 
+// ResolveGoogleAdURL uses the generic extractor
+func ResolveGoogleAdURL(googleURL string) (string, error) {
+	return extractDestURL(googleURL, "adurl")
+}
+
+/*
 // ResolveGoogleAdURL parses a Google URL and extracts the final redirect URL
 func ResolveGoogleAdURL(googleURL string) (string, error) {
 
@@ -63,3 +69,5 @@ func ResolveGoogleAdURL(googleURL string) (string, error) {
 
 	return unescapedGoogleAdURL, nil
 }
+
+*/
