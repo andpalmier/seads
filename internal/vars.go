@@ -43,8 +43,7 @@ var (
 	NoRedirection       = false
 	HtmlPath            = ""
 	Logger              = false
-	// TO BE REMOVED?!
-	DirectQuery = ""
+	DirectQuery         = ""
 
 	// search engine URLs
 	googleurl     = "https://www.google.com/search?q="
@@ -114,8 +113,9 @@ var (
 
 	// color variables
 	green  = color.New(color.FgGreen)
-	italic = color.New(color.Italic)
 	red    = color.New(color.FgRed)
+	italic = color.New(color.Italic)
+	bold   = color.New(color.Bold)
 
 	// Laptop device to be used
 	Laptop = devices.Device{

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-	"log"
 	"net/url"
 	"sync"
 	"time"
@@ -100,27 +99,6 @@ func followAdRedirect(browser *rod.Browser, adURL, userAgent string) (finalURL, 
 	return
 }
 
-/* OLD
-// searchAdsWithEngine performs concurrent ad searches using a specific search engine
-func searchAdsWithEngine(
-	engineFunc func(string, string, string, bool) ([]AdResult, error),
-	query SearchQuery, engineName string, userAgent string, noRedirection bool) ([]AdResult, error) {
-	encodedQuery := url.QueryEscape(query.SearchTerm)
-
-	if Logger {
-		safePrintf(nil, "Searching ads on %s\n", searchEngineURLs[engineName]+query.SearchTerm)
-	}
-
-	// Collect ads using concurrent workers
-	ads, err := runConcurrentSearch(engineFunc, encodedQuery, engineName, userAgent, noRedirection)
-	if err != nil {
-		return nil, fmt.Errorf("search failed for %s: %v", engineName, err)
-	}
-
-	// Process the collected ads
-	return processSearchResults(ads, userAgent, noRedirection)
-}*/
-
 // searchAdsWithEngine performs concurrent ad searches using a specific search engine
 func searchAdsWithEngine(
 	engineFunc func(string, string, string, bool) ([]AdResult, error),
@@ -157,7 +135,7 @@ func runConcurrentSearch(
 			// Fix Recover from panics
 			defer func() {
 				if r := recover(); r != nil {
-					safePrintf(nil, "\n\n******\nPanic in runConcurrentSearch for %s\n*******\n\n", engineName)
+					safePrintf(nil, "\n\n******\nPanic in runConcurrentSearch for %s\n*******\n\n %s", engineName, r)
 				}
 			}()
 			ads, err := engineFunc(query, userAgent, engineName, noRedirection)
@@ -201,7 +179,7 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
 
 	if DirectQuery != "" && len(DirectQuery) > 0 {
-		safePrintf(nil, "\n* DIRECT QUERY SEARCH FOR: '%s'\n\n", DirectQuery)
+		safePrintf(bold, "\n* DIRECT QUERY SEARCH FOR: '%s'\n\n", DirectQuery)
 		for _, engine := range searchEnginesFunctions {
 			safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n\n", engine.EngineName, DirectQuery)
 			adResults, err := searchAdsWithEngine(engine.SearchFunction, DirectQuery, engine.EngineName, UserAgentString, NoRedirection)
@@ -222,17 +200,17 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 		for _, searchQuery := range config.Queries {
 			// Merge expected/exclusion individual expected domain with global domain lists
 			expectedDomainList := mergeLists(globalDomainExclusionList, searchQuery.ExpectedDomains)
-			log.Printf("\n* SEARCHING FOR: '%s'\n\n", searchQuery.SearchTerm)
+			safePrintf(bold, "\n* SEARCHING FOR: '%s'\n\n", searchQuery.SearchTerm)
 
 			for _, engine := range searchEnginesFunctions {
-				log.Printf("> Search Engine lookup using '%s' for keyword '%s'\n", engine.EngineName, searchQuery.SearchTerm)
+				safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n", engine.EngineName, searchQuery.SearchTerm)
 				adResults, err := searchAdsWithEngine(engine.SearchFunction, searchQuery.SearchTerm, engine.EngineName, UserAgentString, NoRedirection)
 				if err != nil {
-					fmt.Printf("Error searching using %s: %v\n", engine.EngineName, err)
+					safePrintf(nil, "Error searching using %s: %v\n", engine.EngineName, err)
 					return nil, nil, err
 				}
 				if len(adResults) == 0 {
-					italic.Printf("  no ads found\n\n")
+					safePrintf(italic, "  no ads found\n\n")
 				} else {
 					err := processAdResults(adResults, expectedDomainList, &allAdResults, &notifications, config)
 					if err != nil {
@@ -244,35 +222,3 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 	}
 	return allAdResults, notifications, nil
 }
-
-/* OLD
-// RunAdSearch returns the ads found in the search engines for the specified config
-func RunAdSearch(config Config) ([]AdResult, []AdResult, []AdResult, error) {
-	var notifications []AdResult
-	var allAdResults []AdResult
-	var submitToURLScan []AdResult
-
-	// Get global domain exclusion list
-	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
-
-	for _, searchQuery := range config.Queries {
-		// Merge expected/exclusion individual expected domain with global domain lists
-		expectedDomainList := mergeLists(globalDomainExclusionList, searchQuery.ExpectedDomains)
-		safePrintf(nil, "\n* SEARCHING FOR: '%s'\n\n", searchQuery.SearchTerm)
-
-		for _, engine := range searchEnginesFunctions {
-			safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n\n", engine.EngineName, searchQuery.SearchTerm)
-			adResults, err := searchAdsWithEngine(engine.SearchFunction, searchQuery, engine.EngineName, UserAgentString, NoRedirection)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			if len(adResults) == 0 {
-				safePrintf(italic, "  no ads found\n\n")
-			} else {
-				processAdResults(adResults, expectedDomainList, &allAdResults, &notifications, &submitToURLScan)
-			}
-		}
-	}
-	return allAdResults, notifications, submitToURLScan, nil
-}
-*/

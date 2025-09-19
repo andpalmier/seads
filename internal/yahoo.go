@@ -2,7 +2,6 @@ package internal
 
 import (
 	"github.com/go-rod/rod"
-	//"time"
 )
 
 // searchYahooAds searches for ads on Yahoo for a given encoded string

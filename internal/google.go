@@ -46,28 +46,3 @@ func handleGooglePageInteraction(page *rod.Page) {
 func ResolveGoogleAdURL(googleURL string) (string, error) {
 	return extractDestURL(googleURL, "adurl")
 }
-
-/*
-// ResolveGoogleAdURL parses a Google URL and extracts the final redirect URL
-func ResolveGoogleAdURL(googleURL string) (string, error) {
-
-	// Parse the unescaped URL
-	parsedURL, err := url.Parse(googleURL)
-	if err != nil || parsedURL.Host == "" {
-		return "", fmt.Errorf("Skipping invalid Google URL: %s, Error: %v\n", googleURL, err)
-	}
-
-	// Extract query parameters from the parsed URL
-	queryParams := parsedURL.Query()
-
-	unescapedGoogleAdURL := queryParams.Get("adurl")
-
-	test, err := url.Parse(unescapedGoogleAdURL)
-	if err != nil || test.Host == "" {
-		return "", fmt.Errorf("Skipping invalid Google URL: %s, Error: %v\n", unescapedGoogleAdURL, err)
-	}
-
-	return unescapedGoogleAdURL, nil
-}
-
-*/

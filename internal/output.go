@@ -58,41 +58,6 @@ func printDomainInfo(resultAd AdResult, expected bool) {
 	safePrintf(nil, "\n")
 }
 
-/* OLD
-
-// printDomainInfo logs domain information based on whether it is expected or unexpected
-func printDomainInfo(resultAd AdResult, expected bool) {
-	if expected {
-		safePrintf(green, "  [+] expected domain: ")
-	} else {
-		safePrintf(red, "  [!] unexpected domain: ")
-	}
-
-	domainToPrint := resultAd.FinalDomainURL
-	urlToPrint := resultAd.FinalRedirectURL
-	originalURL := resultAd.OriginalAdURL
-
-	if PrintCleanLinks {
-		urlToPrint = defangURL(urlToPrint)
-		domainToPrint = defangURL(domainToPrint)
-		originalURL = defangURL(originalURL)
-	}
-
-	safePrintf(nil, "%s => %s\n", domainToPrint, urlToPrint)
-	origDom, _ := extractDomain(originalURL)
-	if domainToPrint != origDom {
-		safePrintf(nil, "  original URL: %s\n", originalURL)
-	}
-
-	if resultAd.Advertiser != "" {
-		safePrintf(nil, "  advertiser name: %s\n  advertiser location: %s\n", resultAd.Advertiser, resultAd.Location)
-	}
-
-	safePrintf(nil, "\n")
-}
-
-*/
-
 // printStringFlag prints a label and its value, using italics for "none" values
 func printStringFlag(label, value string) {
 	if value == "" {
@@ -117,8 +82,6 @@ func PrintFlags() {
 	printStringFlag("OutputFilePath: ", OutputFilePath)
 	safePrintf(nil, "  NoRedirection: %t\n", NoRedirection)
 	printStringFlag("HTMLFilePath: ", HtmlPath)
-	// TO REMOVE
 	printStringFlag("DirectQuery: ", DirectQuery)
 	safePrintf(nil, "  Logger: %t\n\n", Logger)
-
 }

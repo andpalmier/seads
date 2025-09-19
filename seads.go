@@ -47,17 +47,5 @@ func main() {
 		config.SendNotifications(notifications)
 	}
 
-	/* DECOMMENT TO FIX
-	// Submit domain to URLScan
-	if internal.EnableURLScan {
-		if len(submitToURLScan) > 0 {
-			fmt.Println("Total URLs to be submitted to URLScan: ", len(submitToURLScan))
-			config.SubmitURLScan(submitToURLScan)
-		} else {
-			fmt.Println("URLScan enabled, but no submissions")
-		}
-	}
-	*/
-
 	fmt.Println()
 }

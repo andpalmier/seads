@@ -16,15 +16,23 @@ func TestProcessAdResults(t *testing.T) {
 	// Mock output slices
 	var allAdResults []AdResult
 	var notifications []AdResult
-	var submitToURLScan []AdResult
 
 	// Enable necessary flags
-	EnableURLScan = true
 	EnableNotifications = true
 	PrintRedirectChain = false
+	EnableURLScan = false
+
+	// Mock config data
+	config := Config{
+		GlobalDomainExclusion: &GlobalDomainExclusion{
+			GlobalDomainExclusionList: []string{},
+		},
+		Queries:          []SearchQuery{},
+		URLScanSubmitter: nil, // Disable URLScan
+	}
 
 	// Call the function
-	err := processAdResults(adResults, expectedDomainList, &allAdResults, &notifications, &submitToURLScan)
+	err := processAdResults(adResults, expectedDomainList, &allAdResults, &notifications, config)
 	if err != nil {
 		t.Fatalf("processAdResults returned an error: %v", err)
 	}
@@ -34,9 +42,6 @@ func TestProcessAdResults(t *testing.T) {
 	expectedNotifications := []AdResult{
 		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com"},
 	}
-	expectedSubmitToURLScan := []AdResult{
-		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com"},
-	}
 
 	// Assertions
 	if !reflect.DeepEqual(allAdResults, expectedAllAdResults) {
@@ -44,8 +49,5 @@ func TestProcessAdResults(t *testing.T) {
 	}
 	if !reflect.DeepEqual(notifications, expectedNotifications) {
 		t.Errorf("notifications mismatch. Expected: %v, Got: %v", expectedNotifications, notifications)
-	}
-	if !reflect.DeepEqual(submitToURLScan, expectedSubmitToURLScan) {
-		t.Errorf("submitToURLScan mismatch. Expected: %v, Got: %v", expectedSubmitToURLScan, submitToURLScan)
 	}
 }

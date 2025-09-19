@@ -161,20 +161,3 @@ func formatNotificationMessage(resultAd AdResult) string {
 	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n\tURLScan: %s\n",
 		resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL), resultAd.URLScan.Result)
 }
-
-/* OLD
-func formatNotificationMessage(resultAd AdResult) string {
-
-	if resultAd.Advertiser != "" {
-		return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n \tAdvertiser: %s\n\tLocation: %s\n",
-			resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL), resultAd.Advertiser, resultAd.Location)
-		return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n \tAdvertiser: %s\n\tLocation: %s\n\tURLScan: %s\n",
-			resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL), resultAd.Advertiser, resultAd.Location, resultAd.URLScan.Result)
-	}
-
-	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n",
-		resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL))
-	return fmt.Sprintf("* Search engine: %s\n\tSearch term: %s\n\tDomain: %s\n\tFull link: %s\n\tURLScan: %s\n",
-		resultAd.Engine, resultAd.Query, defangURL(resultAd.FinalDomainURL), defangURL(resultAd.FinalRedirectURL), resultAd.URLScan.Result)
-}
-*/
