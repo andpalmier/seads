@@ -8,8 +8,8 @@ import (
 func TestProcessAdResults(t *testing.T) {
 	// Mock input data
 	adResults := []AdResult{
-		{OriginalAdURL: "http://example.com", FinalDomainURL: "example.com"},
-		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com"},
+		{OriginalAdURL: "http://example.com", FinalDomainURL: "example.com", ExpectedDomains: true},
+		{OriginalAdURL: "http://unexpected.com", FinalDomainURL: "unexpected.com", ExpectedDomains: false},
 	}
 	expectedDomainList := []string{"example.com"}
 
