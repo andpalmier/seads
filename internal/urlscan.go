@@ -3,19 +3,13 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
-
-// URLScanSubmitter holds configurations for sending URL with unexpected domain to URLScan
-type URLScanSubmitter struct {
-	Token      string `yaml:"token"`
-	ScanURL    string `yaml:"scanurl"`
-	Tags       string `yaml:"tags"`
-	Visibility string `yaml:"visibility"`
-}
 
 // URLScanSubmissionResponse represents the response from URLScan
 type URLScanSubmissionResponse struct {
@@ -107,6 +101,10 @@ func SubmitURLScan(config Config, urlToScan string) (URLScanSubmissionResponse, 
 	log.Printf("Original URL: %s", response.URL)
 	log.Printf("Country: %s", response.Country)
 	log.Printf("\n*************************\n")
+
+	// Sleep for X seconds every submission
+	fmt.Printf("\nSleeping for %d seconds...\n\n", URLScanSleepSeconds)
+	time.Sleep(time.Duration(URLScanSleepSeconds) * time.Second)
 
 	return response, err
 }

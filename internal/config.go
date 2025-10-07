@@ -16,6 +16,14 @@ type GlobalDomainExclusion struct {
 	GlobalDomainExclusionList []string `yaml:"exclusion-list"`
 }
 
+// URLScanSubmitter holds configurations for sending URL with unexpected domain to URLScan
+type URLScanSubmitter struct {
+	Token      string `yaml:"token"`
+	ScanURL    string `yaml:"scanurl"`
+	Tags       string `yaml:"tags"`
+	Visibility string `yaml:"visibility"`
+}
+
 // Config holds the overall configuration
 type Config struct {
 	TelegramNotifier      *TelegramNotifier      `yaml:"telegram"`
