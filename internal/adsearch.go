@@ -178,15 +178,23 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 	// Get global domain exclusion list
 	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
 
+	// Option for independent DirectQuery from keywords provided from command line
+	// DirectQuery supercede config file
 	if DirectQuery != "" && len(DirectQuery) > 0 {
 		safePrintf(bold, "\n* DIRECT QUERY SEARCH FOR: '%s'\n\n", DirectQuery)
+
+		// Iterate search engines
 		for _, engine := range searchEnginesFunctions {
 			safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n\n", engine.EngineName, DirectQuery)
+
+			// Search for ads on every search engine
 			adResults, err := searchAdsWithEngine(engine.SearchFunction, DirectQuery, engine.EngineName, UserAgentString, NoRedirection)
 			if err != nil {
 				safePrintf(nil, "Error searching using %s: %v\n", engine.EngineName, err)
 				return nil, nil, err
 			}
+
+			// Process ads if found
 			if len(adResults) == 0 {
 				safePrintf(italic, "  no ads found\n\n")
 			} else {
@@ -197,6 +205,7 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 			}
 		}
 	} else {
+		// Iterate keyword provided from the config file
 		for _, searchQuery := range config.Queries {
 			// Merge expected/exclusion individual expected domain with global domain lists
 			expectedDomainList := mergeLists(globalDomainExclusionList, searchQuery.ExpectedDomains)
