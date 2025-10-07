@@ -15,6 +15,7 @@ func main() {
 		log.Printf("URLScan enabled\n")
 	}
 
+	// ParseConfig File
 	config, err := internal.ParseConfig(internal.ConfigFilePath)
 	if err != nil {
 		if internal.ConfigFilePath == "config.yaml" {
@@ -24,9 +25,14 @@ func main() {
 		log.Fatalf("error parsing config file: %v\n", err)
 	}
 
+	// Display Banner and Flags
 	internal.PrintFlags()
 
+	// Display available engines and search queries
+	internal.PrintConfigOverview(config)
+
 	// OLD allAdResults, notifications, submitToURLScan, err := internal.RunAdSearch(config)
+	// RunAdSearch - Advertisement Search
 	allAdResults, notifications, err := internal.RunAdSearch(config)
 	if err != nil {
 		log.Fatalf("error running ad search: %v\n", err)
