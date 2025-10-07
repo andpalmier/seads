@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"strings"
 	"sync"
 )
 
@@ -66,6 +67,50 @@ func printStringFlag(label, value string) {
 	} else {
 		safePrintf(nil, "  %s%s\n", label, value)
 	}
+}
+
+// PrintEngines prints list of searchEngines
+func PrintEngines() {
+	var names []string
+	for _, se := range searchEnginesFunctions {
+		names = append(names, se.EngineName)
+	}
+	safePrintf(nil, "  Engines (%d): %s\n", len(names), strings.Join(names, ", "))
+}
+
+// PrintQueryKeywords prints list of query keywords from config file
+func PrintQueryKeywords(config Config) {
+	if DirectQuery == "" {
+		if config.Queries == nil {
+			fmt.Println("  No queries defined in config")
+		} else {
+			var queries []string
+			for _, searchQuery := range config.Queries {
+				queries = append(queries, searchQuery.SearchTerm)
+			}
+			if len(queries) == 0 {
+
+			} else {
+				safePrintf(nil, "  Queries: %s\n", strings.Join(queries, ", "))
+			}
+		}
+	} else {
+		safePrintf(nil, "  Direct search query: %s\n", DirectQuery)
+	}
+}
+
+// PrintTotalGlobalExclusions prints total global exclusion list
+func PrintTotalGlobalExclusions(config Config) {
+	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
+	fmt.Printf("  Global Domain Exclusion List: %d\n", len(globalDomainExclusionList))
+}
+
+// PrintConfigOverview config overview after banner
+func PrintConfigOverview(config Config) {
+	safePrintln("Search Engines and Keywords:")
+	PrintEngines()
+	PrintQueryKeywords(config)
+	PrintTotalGlobalExclusions(config)
 }
 
 // PrintFlags prints the current values of the command-line arguments
