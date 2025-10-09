@@ -45,6 +45,9 @@ var (
 	Logger              = false
 	DirectQuery         = ""
 
+	// Sleep interval for URLScan
+	URLScanSleepSeconds int = 1
+
 	// search engine URLs
 	googleurl     = "https://www.google.com/search?q="
 	bingurl       = "https://www.bing.com/search?form=QBLH&q="

@@ -42,7 +42,10 @@ func saveHTML(page *rod.Page, outputFilePrefix string, query string) {
 	if Logger {
 		safePrintf(nil, "Save search engine result is on\n")
 	}
-	fileHtmlPath := fmt.Sprintf("%s-%s-%d.html", outputFilePrefix, query, time.Now().UnixNano())
+	fileHtmlPath := fmt.Sprintf("%s-%s-%s.html",
+		outputFilePrefix,
+		query,
+		time.Now().Format("20060102-150405"))
 
 	// Write the HTML content to a file
 	err = os.WriteFile(filepath.Join(HtmlPath, fileHtmlPath), []byte(htmlContent), 0644)
@@ -60,7 +63,10 @@ func takeScreenshot(page *rod.Page, outputFilePrefix string, query string) {
 	if Logger {
 		safePrintf(nil, "Save screenshot is on\n")
 	}
-	filename := fmt.Sprintf("%s-%s-%d.png", outputFilePrefix, query, time.Now().UnixNano())
+	filename := fmt.Sprintf("%s-%s-%s.png",
+		outputFilePrefix,
+		query,
+		time.Now().Format("20060102-150405"))
 	if Logger {
 		safePrintf(nil, "Taking screenshot... ")
 	}
