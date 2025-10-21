@@ -2,11 +2,12 @@ package internal
 
 import (
 	"fmt"
-	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/proto"
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 )
 
 // extractAds extracts advertisement information from a search results page
@@ -175,11 +176,8 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 	var notifications []AdResult
 	var allAdResults []AdResult
 
-	// Get global domain exclusion list
-	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
-
 	// Option for independent DirectQuery from keywords provided from command line
-	// DirectQuery supercede config file
+	// DirectQuery gets priority over config file
 	if DirectQuery != "" && len(DirectQuery) > 0 {
 		safePrintf(bold, "\n* DIRECT QUERY SEARCH FOR: '%s'\n\n", DirectQuery)
 
@@ -198,7 +196,7 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 			if len(adResults) == 0 {
 				safePrintf(italic, "  no ads found\n\n")
 			} else {
-				err := processAdResults(adResults, globalDomainExclusionList, &allAdResults, &notifications, config)
+				err := processAdResults(adResults, GlobalDomainExclusionList, &allAdResults, &notifications, config)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -208,7 +206,7 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 		// Iterate keyword provided from the config file
 		for _, searchQuery := range config.Queries {
 			// Merge expected/exclusion individual expected domain with global domain lists
-			expectedDomainList := mergeLists(globalDomainExclusionList, searchQuery.ExpectedDomains)
+			expectedDomainList := mergeLists(GlobalDomainExclusionList, searchQuery.ExpectedDomains)
 			safePrintf(bold, "\n* SEARCHING FOR: '%s'\n\n", searchQuery.SearchTerm)
 
 			for _, engine := range searchEnginesFunctions {

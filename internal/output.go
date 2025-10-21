@@ -2,9 +2,10 @@ package internal
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"strings"
 	"sync"
+
+	"github.com/fatih/color"
 )
 
 var printMutex sync.Mutex
@@ -101,8 +102,13 @@ func PrintQueryKeywords(config Config) {
 
 // PrintTotalGlobalExclusions prints total global exclusion list
 func PrintTotalGlobalExclusions(config Config) {
-	globalDomainExclusionList := config.GlobalDomainExclusion.GlobalDomainExclusionList
-	fmt.Printf("  Global Domain Exclusion List: %d\n", len(globalDomainExclusionList))
+
+	if config.GlobalDomainExclusion == nil {
+		fmt.Printf("  Global Domain Exclusion List: %d\n", 0)
+		return
+	}
+	GlobalDomainExclusionList = config.GlobalDomainExclusion.GlobalDomainExclusionList
+	fmt.Printf("  Global Domain Exclusion List: %d\n", len(GlobalDomainExclusionList))
 }
 
 // PrintConfigOverview config overview after banner

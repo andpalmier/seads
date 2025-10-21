@@ -1,9 +1,10 @@
 package internal
 
 import (
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/go-rod/rod/lib/devices"
-	"time"
 )
 
 // SearchEngineFunction holds the search engine name and its corresponding function
@@ -31,19 +32,20 @@ type AdResult struct {
 
 var (
 	// command line args
-	ConfigFilePath      = "config.yaml"
-	ConcurrencyLevel    = 4
-	ScreenshotPath      = ""
-	PrintCleanLinks     = false
-	EnableNotifications = false
-	PrintRedirectChain  = false
-	UserAgentString     = ""
-	EnableURLScan       = false
-	OutputFilePath      = ""
-	NoRedirection       = false
-	HtmlPath            = ""
-	Logger              = false
-	DirectQuery         = ""
+	ConfigFilePath            = "config.yaml"
+	ConcurrencyLevel          = 4
+	ScreenshotPath            = ""
+	PrintCleanLinks           = false
+	EnableNotifications       = false
+	PrintRedirectChain        = false
+	UserAgentString           = ""
+	EnableURLScan             = false
+	OutputFilePath            = ""
+	NoRedirection             = false
+	HtmlPath                  = ""
+	Logger                    = false
+	DirectQuery               = ""
+	GlobalDomainExclusionList = []string{}
 
 	// Sleep interval for URLScan
 	URLScanSleepSeconds int = 1
