@@ -54,7 +54,7 @@ func printDomainInfo(resultAd AdResult, expected bool) {
 	}
 
 	if resultAd.Advertiser != "" {
-		safePrintf(nil, "  advertiser name: %s\n  advertiser location: %s\n", resultAd.Advertiser, resultAd.Location)
+		safePrintf(nil, "  advertiser name: %s\n  advertiser location: %s\n  advertiser adsurl: %s\n", resultAd.Advertiser, resultAd.Location, resultAd.AdInfoURL)
 	}
 
 	safePrintf(nil, "\n")
