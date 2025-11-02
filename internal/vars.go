@@ -105,6 +105,7 @@ var (
 	aolCookieBtn    = `button[value="reject"]`
 	aolScrollBtn    = `button#scroll-down-btn`
 	adInfoText      = `//div[div[text()="Location"]]/div[2]/text() | //div[div[text()="Location"]]/preceding-sibling::div[1]/div[2]/text()`
+	adDirectLink    = `//a[normalize-space(text())="See more ads"]`
 
 	// search engine functions
 	searchEnginesFunctions = []SearchEngineFunction{
