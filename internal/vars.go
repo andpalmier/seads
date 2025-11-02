@@ -47,6 +47,7 @@ var (
 	Logger                    = false
 	DirectQuery               = ""
 	GlobalDomainExclusionList = []string{}
+	SelectedEngine            = ""
 
 	// Sleep interval for URLScan
 	URLScanSleepSeconds int = 1

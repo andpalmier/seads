@@ -101,3 +101,71 @@ func TestGlobalDomainExclusionList(t *testing.T) {
 	}
 
 }
+
+func TestIsInSelectedSearchEngineList(t *testing.T) {
+	// Mock user defined list of SelectedEngine separated by comma
+	SelectedEngine = "google, aol    ,syndicated, google1, typo-edsearch engine,yah oo, yahoo"
+
+	// From available engine check if the Selected Engine
+	testMockSelection := make(map[string]bool) // instantiate to all false
+	for _, e := range searchEnginesFunctions {
+		testMockSelection[e.EngineName] = false
+	}
+
+	for _, engine := range searchEnginesFunctions {
+		testMockSelection[engine.EngineName] = isInSelectedSearchEngineList(engine.EngineName)
+	}
+
+	if testMockSelection["google"] == false {
+		t.Errorf("Search engine 'google' is in test map but not flagged as expected")
+	}
+
+	if testMockSelection["aol"] == false {
+		t.Errorf("Search engine 'aol' is in test map but not flagged as expected")
+	}
+
+	if testMockSelection["syndicated"] == false {
+		t.Errorf("Search engine 'syndicated' is in test map but not flagged as expected")
+	}
+
+	if testMockSelection["bing"] == true {
+		t.Errorf("Search engine 'bing' is NOT test map but flagged as expected")
+	}
+
+	if _, exists := testMockSelection["google1"]; exists {
+		t.Errorf("Search engine 'google1' is NOT a valid search engine but flagged as expected")
+	}
+
+	if _, exists := testMockSelection["typo-edsearch engine"]; exists {
+		t.Errorf("Search engine 'typo-edsearch engine' is NOT a valid search engine but flagged as expected")
+	}
+
+	if _, exists := testMockSelection["yah oo"]; exists {
+		t.Errorf("Search engine 'typo-edsearch engine' is NOT a valid search engine but flagged as expected")
+	}
+
+	if testMockSelection["yahoo"] == false {
+		t.Errorf("Search engine 'aol' is in test map but not flagged as expected")
+	}
+}
+
+func TestSearchEngineUnused(t *testing.T) {
+	// Mock user defined list of SelectedEngine separated by comma
+	SelectedEngine = ""
+
+	// From available engine check if the Selected Engine
+	testMockSelection := make(map[string]bool) // instantiate to all false
+	for _, engine := range searchEnginesFunctions {
+		testMockSelection[engine.EngineName] = false
+	}
+
+	for _, engine := range searchEnginesFunctions {
+		testMockSelection[engine.EngineName] = isInSelectedSearchEngineList(engine.EngineName)
+	}
+
+	for engineName, boolActive := range testMockSelection {
+		if boolActive == false {
+			t.Errorf("Search engine '%s' is in test map but not flagged as expected", engineName)
+		}
+	}
+}

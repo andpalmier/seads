@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,7 +57,7 @@ func extractAds(browser *rod.Browser, page *rod.Page, userAgent, linkSelector, a
 				ad.Advertiser, ad.Location = "", ""
 				adInfo, err := getAdInfo(browser, adDetails[i])
 				if err == nil && len(adInfo) >= 2 {
-					ad.Advertiser, ad.Location = adInfo[0], adInfo[1]
+					ad.Advertiser, ad.Location, ad.AdInfoURL = adInfo[0], adInfo[1], adInfo[2]
 				}
 			}
 
@@ -107,7 +108,7 @@ func searchAdsWithEngine(
 	encodedQuery := url.QueryEscape(query)
 
 	if Logger {
-		safePrintf(nil, "Searching ads on %s\n", searchEngineURLs[engineName]+query)
+		safePrintf(nil, "Searching ads on %s\n", searchEngineURLs[engineName]+encodedQuery)
 	}
 
 	// Collect ads using concurrent workers
@@ -183,6 +184,10 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 
 		// Iterate search engines
 		for _, engine := range searchEnginesFunctions {
+			// Check if SelectedEngine engine option is enabled and the search engine name inside the list
+			if isInSelectedSearchEngineList(engine.EngineName) == false {
+				continue
+			}
 			safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n\n", engine.EngineName, DirectQuery)
 
 			// Search for ads on every search engine
@@ -210,6 +215,10 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 			safePrintf(bold, "\n* SEARCHING FOR: '%s'\n\n", searchQuery.SearchTerm)
 
 			for _, engine := range searchEnginesFunctions {
+				// Check if SelectedEngine engine option is enabled and the search engine name inside the list
+				if isInSelectedSearchEngineList(engine.EngineName) == false {
+					continue
+				}
 				safePrintf(nil, "> Search Engine lookup using '%s' for keyword '%s'\n", engine.EngineName, searchQuery.SearchTerm)
 				adResults, err := searchAdsWithEngine(engine.SearchFunction, searchQuery.SearchTerm, engine.EngineName, UserAgentString, NoRedirection)
 				if err != nil {
@@ -228,4 +237,19 @@ func RunAdSearch(config Config) ([]AdResult, []AdResult, error) {
 		}
 	}
 	return allAdResults, notifications, nil
+}
+
+func isInSelectedSearchEngineList(engineName string) bool {
+	if SelectedEngine == "" {
+		return true
+	}
+
+	selectedEngineList := strings.Split(SelectedEngine, ",")
+	for _, searchEngine := range selectedEngineList {
+		searchEngine = strings.TrimSpace(searchEngine)
+		if engineName == searchEngine {
+			return true
+		}
+	}
+	return false
 }
