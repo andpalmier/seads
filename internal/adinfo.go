@@ -42,8 +42,24 @@ func getAdInfo(browser *rod.Browser, adDetail *rod.Element) ([]string, error) {
 		name = name[len(prefix):]
 	}
 
-	// save advertiser name and location in advertisersInfo: [0] is name, [1] is location
-	adInfoResult = append(adInfoResult, name, advertisersInfo[1].MustText())
+	hasDirectLink := true
+	advertiserDirectLink, err := adInfoPage.ElementsX(adDirectLink)
+	if err != nil || len(advertiserDirectLink) == 0 {
+		hasDirectLink = false
+	}
+
+	if hasDirectLink {
+		// Get the href attribute
+		href, err := advertiserDirectLink[0].Attribute("href")
+		if err == nil {
+			adInfoResult = append(adInfoResult, name, advertisersInfo[1].MustText(), *href)
+		} else {
+			adInfoResult = append(adInfoResult, name, advertisersInfo[1].MustText(), *adInfoURL)
+		}
+	} else {
+		// save advertiser name and location in advertisersInfo: [0] is name, [1] is location
+		adInfoResult = append(adInfoResult, name, advertisersInfo[1].MustText(), *adInfoURL)
+	}
 
 	return adInfoResult, nil
 }

@@ -24,6 +24,7 @@ type AdResult struct {
 	Time             time.Time `json:"time"`
 	Advertiser       string    `json:"advertiser"`
 	Location         string    `json:"location"`
+	AdInfoURL        string    `json:"adsUrl"`
 
 	// REMOVE BOTH
 	ExpectedDomains bool                      `json:"expected-domains"`
