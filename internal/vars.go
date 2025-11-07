@@ -24,6 +24,7 @@ type AdResult struct {
 	Time             time.Time `json:"time"`
 	Advertiser       string    `json:"advertiser"`
 	Location         string    `json:"location"`
+	AdInfoURL        string    `json:"adsUrl"`
 
 	// REMOVE BOTH
 	ExpectedDomains bool                      `json:"expected-domains"`
@@ -46,6 +47,7 @@ var (
 	Logger                    = false
 	DirectQuery               = ""
 	GlobalDomainExclusionList = []string{}
+	SelectedEngine            = ""
 
 	// Sleep interval for URLScan
 	URLScanSleepSeconds int = 1
@@ -104,6 +106,7 @@ var (
 	aolCookieBtn    = `button[value="reject"]`
 	aolScrollBtn    = `button#scroll-down-btn`
 	adInfoText      = `//div[div[text()="Location"]]/div[2]/text() | //div[div[text()="Location"]]/preceding-sibling::div[1]/div[2]/text()`
+	adDirectLink    = `//a[normalize-space(text())="See more ads"]`
 
 	// search engine functions
 	searchEnginesFunctions = []SearchEngineFunction{

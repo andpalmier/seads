@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func init() {
@@ -21,6 +22,7 @@ func init() {
 	flag.StringVar(&HtmlPath, "html", HtmlPath, "path to store search engine result html page (if empty, the htmlPath feature will be disabled)")
 	flag.BoolVar(&Logger, "log", Logger, "enable detailed logging, VERY VERBOSE!")
 	flag.StringVar(&DirectQuery, "directquery", DirectQuery, "Direct query from command line and not using queries on config file")
+	flag.StringVar(&SelectedEngine, "selectedengine", SelectedEngine, getHelpEngineList())
 	log.SetFlags(0)
 }
 
@@ -32,4 +34,14 @@ func ShowHelp() {
 	fmt.Println()
 
 	os.Exit(1)
+}
+
+// Option to use selected search engine
+func getHelpEngineList() string {
+	var engineNames []string
+	for _, se := range searchEnginesFunctions {
+		engineNames = append(engineNames, se.EngineName)
+	}
+	var engineNamesList = strings.Join(engineNames, ",")
+	return fmt.Sprintf("Available search engine(s) selections separated by comma: %s (Default is all engines)", engineNamesList)
 }
