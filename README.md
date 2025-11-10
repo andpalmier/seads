@@ -28,6 +28,9 @@ Cybercriminals are increasingly using search engines ads to drive traffic to phi
 - **Defanging**: Defang URLs in notifications to prevent accidental clicks.
 - **HTML page saving**: Save the HTML page of the search engine result for later analysis.
 - **Expected domains**: Specify expected domains to filter out known advertisers from notifications.
+- **Global Domain Exclusion**: Specify list of domains to be globally excluded instead of repeating on config list.
+- **Search Engine Selection**: Command line option to select desired search engine.
+- **DirectQuery"**: Command line option to use single query.
 
 > [!NOTE]  
 > Currently, the Google search detection doesn't always work because the automated browser is often prompted by a CAPTCHA. As a workaround, Syndicated and AdSense are used to gather ads from Google ([see here](https://support.google.com/adsense/answer/14201307)). This may not be 100% accurate, but it is the best available option as of now.
@@ -112,6 +115,18 @@ Same as above, but in Docker:
 docker run -v "$(pwd)":/mnt seads -config /mnt/config.yaml -urlscan -noredirect -screenshot /mnt/screenshots -html /mnt/htmls
 ```
 
+Extended to example above with single keyword on certain with desired search engine:
+
+```bash
+seads -config config.yaml -urlscan -noredirect -screenshot ./screenshots -html ./htmls -directquery "as roma" -selectedengine "duckduckgo,syndicated"
+```
+
+and, in Docker:
+
+```bash
+docker run -v "$(pwd)":/mnt seads -config /mnt/config.yaml -urlscan -noredirect -screenshot /mnt/screenshots -html /mnt/htmls -directquery "as roma" -selectedengine "duckduckgo,syndicated"
+```
+
 You can leverage the notification feature by automating the execution of `seads` using a cron job or a task scheduler.
 For example, in a Linux machine you can set up a cron job to run `seads` every day at 9 AM by adding the following line to your crontab:
 
@@ -130,29 +145,33 @@ Screenshot example:
 
 ```
   -config (string) [REQUIRED]
-    path to config file (default "config.yaml")
-  -concurrency (int)
-    number of concurrent headless browsers (default 4)
+        path to config file (default "config.yaml") (default "config.yaml")
   -cleanlinks
-    print clear links in output (links will remain defanged in notifications)
-  -html (string)
-    path to store search engine result html page (if empty, the htmlPath feature will be disabled)
+        print clear links in output (links will remain defanged in notifications)
+  -concurrency int
+        number of concurrent headless browsers (default 4) (default 4)
+  -directquery string
+        Direct query from command line and not using queries on config file
+  -html string
+        path to store search engine result html page (if empty, the htmlPath feature will be disabled)
   -log
-    enable detailed logging, VERY VERBOSE!
+        enable detailed logging, VERY VERBOSE!
   -noredirect
-    do not follow redirection; if "urlscan" is enabled, submit link to resolve by URLScan instead
+        do not follow redirection; if "urlscan" is enabled, submit advertisement link to resolve by URLScan instead
   -notify
-    notify if unexpected domains are found (requires notifications fields in config.yaml)
-  -out (string)
-    path of JSON file containing links of gathered ads
-  -screenshot (string)
-    path to store screenshots (if empty, the screenshot feature will be disabled)
+        notify if unexpected domains are found (requires notifications fields in config.yaml)
+  -out string
+        path of JSON file containing links of gathered ads
   -printredirect
-    print redirection chain for ad links found
-  -ua (string)
-    User-Agent string to be used to click on ads
+        print redirection chain for ad links found
+  -screenshot string
+        path to store screenshots (if empty, the screenshot feature will be disabled)
+  -selectedengine string
+        Available search engine(s) selections separated by comma: google,bing,duckduckgo,yahoo,syndicated,adsenseads,aol (Default is all engines)
+  -ua string
+        User-Agent string to be used to click on ads
   -urlscan
-    submit url to urlscan.io for analysis
+        submit url to urlscan.io for analysis
 ```
 
 ## 3rd party libraries 📚
